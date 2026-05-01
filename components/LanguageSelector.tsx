@@ -1,50 +1,61 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useEffect } from "react"
 import { Globe } from "lucide-react"
-
-const LANGUAGES = [
-  { code: "en", name: "English" },
-  { code: "es", name: "Español" },
-  { code: "fr", name: "Français" },
-  { code: "hi", name: "हिन्दी" },
-  { code: "zh", name: "中文" },
-  { code: "ar", name: "العربية" },
-  { code: "pt", name: "Português" },
-  { code: "tl", name: "Tagalog" },
-]
+import Script from "next/script"
 
 export function LanguageSelector() {
-  const [lang, setLang] = useState("en")
-
+  // Initialize Google Translate widget
   useEffect(() => {
-    const savedLang = localStorage.getItem("civiciq_lang")
-    if (savedLang) setLang(savedLang)
+    // @ts-ignore
+    window.googleTranslateElementInit = () => {
+      // @ts-ignore
+      new window.google.translate.TranslateElement(
+        // @ts-ignore
+        { pageLanguage: "en", includedLanguages: "en,kn,hi", layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE },
+        "google_translate_element"
+      )
+    }
   }, [])
-
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newLang = e.target.value
-    setLang(newLang)
-    localStorage.setItem("civiciq_lang", newLang)
-    // Trigger translation logic here or reload
-    window.location.reload()
-  }
 
   return (
     <div className="flex items-center gap-2">
       <Globe className="h-4 w-4 text-primary" />
-      <select
-        value={lang}
-        onChange={handleChange}
-        className="bg-transparent border-none text-sm font-medium text-primary outline-none focus:ring-2 focus:ring-primary rounded"
-        aria-label="Select language"
-      >
-        {LANGUAGES.map((l) => (
-          <option key={l.code} value={l.code}>
-            {l.name}
-          </option>
-        ))}
-      </select>
+      <div id="google_translate_element" className="overflow-hidden h-8 flex items-center"></div>
+      
+      {/* Global CSS to style the Google Translate widget and hide the top banner */}
+      <style dangerouslySetInnerHTML={{__html: `
+        .goog-te-gadget {
+          font-family: inherit !important;
+          font-size: 0px !important;
+          color: transparent !important;
+        }
+        .goog-te-gadget .goog-te-combo {
+          font-size: 14px !important;
+          color: var(--color-primary);
+          background-color: transparent;
+          border: none;
+          outline: none;
+          cursor: pointer;
+          font-weight: 500;
+        }
+        .goog-logo-link {
+          display:none !important;
+        }
+        .goog-te-gadget img {
+          display: none !important;
+        }
+        .goog-te-banner-frame.skiptranslate {
+          display: none !important;
+        }
+        body {
+          top: 0px !important; 
+        }
+      `}} />
+      <Script 
+        src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" 
+        strategy="lazyOnload"
+      />
     </div>
   )
 }

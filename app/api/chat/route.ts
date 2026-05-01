@@ -30,7 +30,8 @@ export async function POST(req: Request) {
     return new StreamingTextResponse(stream)
   } catch (error: any) {
     console.error("Gemini Chat Error:", error)
-    return new Response(JSON.stringify({ error: error.message }), {
+    
+    return new Response(JSON.stringify({ error: error.message || "An unknown error occurred with the Gemini API." }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     })

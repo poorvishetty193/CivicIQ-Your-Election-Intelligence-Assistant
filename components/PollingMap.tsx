@@ -10,11 +10,8 @@ export function PollingMap() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    if (zip) {
-      window.open(`https://www.vote.org/polling-place-locator/?zip=${zip}`, "_blank")
-    } else {
-      window.open("https://www.vote.org/polling-place-locator/", "_blank")
-    }
+    // vote.org blocks iframes and scraping. We direct to the official USA.gov locator.
+    window.open("https://www.usa.gov/election-office", "_blank")
   }
 
   return (
@@ -53,7 +50,7 @@ export function PollingMap() {
 
           <div className="pt-4">
             <Button asChild className="w-full md:w-fit gap-2">
-              <a href="https://vote.org" target="_blank" rel="noopener noreferrer">
+              <a href="https://vote.gov" target="_blank" rel="noopener noreferrer">
                 Official Voter Resources <ExternalLink className="h-4 w-4" />
               </a>
             </Button>

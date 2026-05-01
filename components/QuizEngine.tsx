@@ -105,7 +105,13 @@ export function QuizEngine() {
   const [isAnswered, setIsAnswered] = useState(false)
   const [personalBest, setPersonalBest] = useState(0)
 
+  const [shuffledQuestions, setShuffledQuestions] = useState<typeof QUESTIONS>([])
+
   useEffect(() => {
+    // Shuffle the questions and pick the first 10 for a fresh experience each time
+    const shuffled = [...QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10)
+    setShuffledQuestions(shuffled)
+    
     const saved = localStorage.getItem("civiciq_quiz_best")
     if (saved) setPersonalBest(parseInt(saved))
   }, [])
@@ -117,17 +123,20 @@ export function QuizEngine() {
     }
   }, [showResult, score, personalBest])
 
+  if (shuffledQuestions.length === 0) return null // Wait for mount
+
+
   const handleAnswer = (option: string) => {
     if (isAnswered) return
     setSelectedOption(option)
     setIsAnswered(true)
-    if (option === QUESTIONS[currentStep].answer) {
+    if (option === shuffledQuestions[currentStep].answer) {
       setScore(score + 1)
     }
   }
 
   const nextQuestion = () => {
-    if (currentStep < QUESTIONS.length - 1) {
+    if (currentStep < shuffledQuestions.length - 1) {
       setCurrentStep(currentStep + 1)
       setSelectedOption(null)
       setIsAnswered(false)
@@ -137,7 +146,7 @@ export function QuizEngine() {
   }
 
   const getBadge = (s: number) => {
-    const percent = (s / QUESTIONS.length) * 100
+    const percent = (s / shuffledQuestions.length) * 100
     if (percent === 100) return { title: "Democracy Champion", icon: <Trophy className="h-12 w-12 text-yellow-500" /> }
     if (percent >= 70) return { title: "Civic Expert", icon: <Award className="h-12 w-12 text-blue-500" /> }
     return { title: "Civic Novice", icon: <Award className="h-12 w-12 text-gray-500" /> }
@@ -157,7 +166,7 @@ export function QuizEngine() {
         <h2 className="text-3xl font-bold mb-2">Quiz Complete!</h2>
         <p className="text-xl mb-6">You earned the <span className="text-primary font-bold">{badge.title}</span> badge.</p>
         <div className="bg-bg p-6 rounded-lg mb-8">
-          <p className="text-4xl font-bold text-primary">{score} / {QUESTIONS.length}</p>
+          <p className="text-4xl font-bold text-primary">{score} / {shuffledQuestions.length}</p>
           <p className="text-primary/60">Correct Answers</p>
         </div>
 
@@ -171,15 +180,15 @@ export function QuizEngine() {
         {personalBest > 0 && (
           <div className="mt-8 pt-8 border-t border-primary/10">
             <p className="text-sm text-primary/60 font-medium uppercase tracking-wider">Your Personal Best</p>
-            <p className="text-2xl font-bold text-primary">{personalBest} / {QUESTIONS.length}</p>
+            <p className="text-2xl font-bold text-primary">{personalBest} / {shuffledQuestions.length}</p>
           </div>
         )}
       </div>
     )
   }
 
-  const q = QUESTIONS[currentStep]
-  const progress = ((currentStep + 1) / QUESTIONS.length) * 100
+  const q = shuffledQuestions[currentStep]
+  const progress = ((currentStep + 1) / shuffledQuestions.length) * 100
 
   return (
     <div className="max-w-3xl mx-auto w-full bg-surface rounded-custom shadow-custom border border-primary/10 overflow-hidden">
@@ -192,7 +201,7 @@ export function QuizEngine() {
 
       <div className="p-8 md:p-12">
         <div className="mb-8">
-          <span className="text-sm font-bold text-primary/50 uppercase tracking-widest">Question {currentStep + 1} of {QUESTIONS.length}</span>
+          <span className="text-sm font-bold text-primary/50 uppercase tracking-widest">Question {currentStep + 1} of {shuffledQuestions.length}</span>
           <h2 className="text-2xl md:text-3xl font-bold mt-2 leading-tight">{q.question}</h2>
         </div>
 
@@ -235,7 +244,7 @@ export function QuizEngine() {
             disabled={!isAnswered}
             className="gap-2"
           >
-            {currentStep === QUESTIONS.length - 1 ? "Finish Quiz" : "Next Question"}
+            {currentStep === shuffledQuestions.length - 1 ? "Finish Quiz" : "Next Question"}
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>

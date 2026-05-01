@@ -4,8 +4,10 @@ import { useRef, useEffect, useState } from "react"
 import { useChat } from "ai/react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
-import { Send, Copy, Download, Bot, User, Loader2, Volume2 } from "lucide-react"
+import { Send, Copy, Download, Bot, User, Loader2, Volume2, VolumeX } from "lucide-react"
 import jsPDF from "jspdf"
+import ReactMarkdown from "react-markdown"
+import remarkGfm from "remark-gfm"
 
 const STARTER_QUESTIONS = [
   "How do I register to vote?",
@@ -16,7 +18,7 @@ const STARTER_QUESTIONS = [
 ]
 
 export function ChatInterface() {
-  const { messages, input, handleInputChange, handleSubmit, append, isLoading } = useChat()
+  const { messages, input, handleInputChange, handleSubmit, append, isLoading, error } = useChat()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [ttsEnabled, setTtsEnabled] = useState(false)
 
@@ -43,6 +45,11 @@ export function ChatInterface() {
     window.speechSynthesis.cancel()
     const utterance = new SpeechSynthesisUtterance(text)
     window.speechSynthesis.speak(utterance)
+  }
+
+  const stopAudio = () => {
+    if (!window.speechSynthesis) return
+    window.speechSynthesis.cancel()
   }
 
   const copyToClipboard = (text: string) => {
@@ -78,6 +85,10 @@ export function ChatInterface() {
           <h2 className="font-bold text-lg">CivicIQ Assistant</h2>
         </div>
         <div className="flex gap-2">
+          <Button variant="ghost" size="sm" onClick={stopAudio} className="gap-2 text-primary/70 hover:text-primary">
+            <VolumeX className="h-4 w-4" />
+            <span className="hidden sm:inline">Stop Audio</span>
+          </Button>
           {messages.length > 0 && (
             <Button variant="outline" size="sm" onClick={exportPDF} className="gap-2">
               <Download className="h-4 w-4" />
@@ -120,8 +131,10 @@ export function ChatInterface() {
               <div className={`relative group max-w-[80%] rounded-2xl p-4 ${
                 m.role === "user" ? "bg-primary text-white rounded-tr-sm" : "bg-bg text-text rounded-tl-sm border border-primary/10"
               }`}>
-                <div className="prose prose-sm md:prose-base dark:prose-invert whitespace-pre-wrap max-w-none">
-                  {m.content}
+                <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    {m.content}
+                  </ReactMarkdown>
                 </div>
                 {m.role === "assistant" && (
                   <div className="absolute -right-12 top-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -153,6 +166,17 @@ export function ChatInterface() {
             <div className="bg-bg text-text rounded-2xl rounded-tl-sm border border-primary/10 p-4 flex items-center gap-2">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
               <span className="text-sm text-primary/70">CivicIQ is thinking...</span>
+            </div>
+          </div>
+        )}
+        {error && (
+          <div className="flex gap-4 animate-in fade-in">
+            <div className="shrink-0 h-10 w-10 rounded-full flex items-center justify-center bg-red-500 text-white">
+              <Bot className="h-5 w-5" />
+            </div>
+            <div className="bg-red-500/10 text-red-600 rounded-2xl rounded-tl-sm border border-red-500/20 p-4">
+              <p className="font-bold mb-1">Connection Error</p>
+              <p className="text-sm">{error.message}</p>
             </div>
           </div>
         )}
