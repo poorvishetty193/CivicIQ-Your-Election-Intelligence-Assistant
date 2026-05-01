@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-primary: #1B3A6B;      /* Deep civic blue */
+    --color-accent: #C9A84C;       /* Gold */
+    --color-success: #2D7D46;      /* Verified green */
+    --color-bg: #F8F7F4;           /* Warm off-white */
+    --color-surface: #FFFFFF;
+    --color-text: #1A1A2E;
+    --font-display: 'DM Serif Display', serif;
+    --font-body: 'DM Sans', sans-serif;
+    --radius: 12px;
+    --shadow: 0 4px 24px rgba(27,58,107,0.10);
+  }
+
+  /* Optional Dark Mode if desired later, but right now we set to default */
+  .dark {
+    --color-primary: #8AB4F8;
+    --color-accent: #FDE293;
+    --color-success: #81C995;
+    --color-bg: #121212;
+    --color-surface: #1E1E1E;
+    --color-text: #E8EAED;
+  }
+}
+
+@layer base {
+  body {
+    /* Styles are already applied in layout.tsx, but we can set defaults here using standard CSS */
+    background-color: var(--color-bg);
+    color: var(--color-text);
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    color: var(--color-primary);
+  }
+}
