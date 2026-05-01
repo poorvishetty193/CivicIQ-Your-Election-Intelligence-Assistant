@@ -1,7 +1,7 @@
 "use client"
 
 import { useRef, useEffect, useState } from "react"
-import { useChat } from "@ai-sdk/react"
+import { useChat } from "ai/react"
 import { Button } from "./ui/button"
 import { Input } from "./ui/input"
 import { Send, Copy, Download, Bot, User, Loader2, Volume2 } from "lucide-react"
@@ -16,29 +16,7 @@ const STARTER_QUESTIONS = [
 ]
 
 export function ChatInterface() {
-  const [input, setInput] = useState("")
-  const { messages, status, sendMessage } = useChat()
-  const isLoading = status === "submitted" || status === "streaming"
-
-  // Helper to extract text from structured message parts
-  const getMessageText = (m: any) => {
-    return m.parts
-      ?.filter((p: any) => p.type === "text")
-      .map((p: any) => p.text)
-      .join("") || ""
-  }
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value)
-  }
-
-  const handleSubmit = async (e?: React.FormEvent) => {
-    e?.preventDefault()
-    if (!input.trim() || isLoading) return
-    const currentInput = input
-    setInput("")
-    await sendMessage({ text: currentInput })
-  }
+  const { messages, input, handleInputChange, handleSubmit, append, isLoading } = useChat()
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [ttsEnabled, setTtsEnabled] = useState(false)
 
@@ -48,7 +26,7 @@ export function ChatInterface() {
 
   useEffect(() => {
     scrollToBottom()
-    
+
     // Check if TTS is enabled in localStorage
     const savedTts = localStorage.getItem("civiciq_a11y_tts") === "true"
     setTtsEnabled(savedTts)
@@ -56,7 +34,7 @@ export function ChatInterface() {
     // Read last assistant message if TTS is enabled
     const lastMessage = messages[messages.length - 1]
     if (savedTts && lastMessage?.role === "assistant" && !isLoading) {
-      speak(getMessageText(lastMessage))
+      speak(lastMessage.content)
     }
   }, [messages, isLoading])
 
@@ -81,7 +59,7 @@ export function ChatInterface() {
 
     messages.forEach((m) => {
       const prefix = m.role === "user" ? "You: " : "CivicIQ: "
-      const lines = doc.splitTextToSize(`${prefix}${getMessageText(m)}`, 180)
+      const lines = doc.splitTextToSize(`${prefix}${m.content}`, 180)
       if (y + lines.length * 7 > 280) {
         doc.addPage()
         y = 10
@@ -114,13 +92,13 @@ export function ChatInterface() {
           <div className="flex flex-col items-center justify-center h-full text-center space-y-6 opacity-80 animate-in fade-in zoom-in duration-500">
             <Bot className="h-16 w-16 text-primary/50" />
             <p className="text-lg max-w-md">
-              Hi! I'm CivicIQ, your nonpartisan election assistant powered by Google Gemini. Ask me anything about voting and elections.
+              Hi! I&apos;m CivicIQ, your nonpartisan election assistant powered by Google Gemini. Ask me anything about voting and elections.
             </p>
             <div className="flex flex-wrap justify-center gap-2 max-w-2xl">
               {STARTER_QUESTIONS.map((q) => (
                 <button
                   key={q}
-                  onClick={() => sendMessage({ text: q })}
+                  onClick={() => append({ role: "user", content: q })}
                   className="px-4 py-2 bg-primary/5 hover:bg-primary/10 border border-primary/10 rounded-full text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-primary outline-none"
                 >
                   {q}
@@ -143,19 +121,19 @@ export function ChatInterface() {
                 m.role === "user" ? "bg-primary text-white rounded-tr-sm" : "bg-bg text-text rounded-tl-sm border border-primary/10"
               }`}>
                 <div className="prose prose-sm md:prose-base dark:prose-invert whitespace-pre-wrap max-w-none">
-                  {getMessageText(m)}
+                  {m.content}
                 </div>
                 {m.role === "assistant" && (
                   <div className="absolute -right-12 top-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
-                      onClick={() => copyToClipboard(getMessageText(m))}
+                      onClick={() => copyToClipboard(m.content)}
                       className="p-2 text-primary hover:bg-primary/10 rounded"
                       aria-label="Copy message"
                     >
                       <Copy className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => speak(getMessageText(m))}
+                      onClick={() => speak(m.content)}
                       className="p-2 text-primary hover:bg-primary/10 rounded"
                       aria-label="Read aloud"
                     >

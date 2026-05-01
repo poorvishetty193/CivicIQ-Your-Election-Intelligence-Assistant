@@ -1,14 +1,17 @@
 import { describe, it, expect, vi } from 'vitest'
 
 // Mock Vercel AI SDK
-vi.mock('@ai-sdk/react', () => ({
+vi.mock('ai/react', () => ({
   useChat: () => ({
     messages: [
-      { id: '1', role: 'user', parts: [{ type: 'text', text: 'Hello' }] },
-      { id: '2', role: 'assistant', parts: [{ type: 'text', text: 'Hi, I am CivicIQ!' }] }
+      { id: '1', role: 'user', content: 'Hello' },
+      { id: '2', role: 'assistant', content: 'Hi, I am CivicIQ!' }
     ],
-    status: 'ready',
-    sendMessage: vi.fn(),
+    input: '',
+    handleInputChange: vi.fn(),
+    handleSubmit: vi.fn(),
+    append: vi.fn(),
+    isLoading: false
   })
 }))
 
