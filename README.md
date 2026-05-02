@@ -25,7 +25,6 @@
 10. [Running Tests](#running-tests)
 11. [Accessibility](#accessibility)
 12. [Project Structure](#project-structure)
-13. [License](#license)
 
 ---
 
@@ -352,13 +351,12 @@ npm run lint         # ESLint check
 
 ---
 
-## 13. License
-
-MIT License — see [LICENSE](./LICENSE) for details.
-
----
-
-*Built for the Virtual HacktoSkill Hackathon — Election Process Education vertical.*
 *Powered by Google Gemini 2.0 Flash. Built with Next.js 14.*
 
 **Go vote. 🗳️**
+
+---
+
+## Author: 
+
+**Poorvi Shetty**
