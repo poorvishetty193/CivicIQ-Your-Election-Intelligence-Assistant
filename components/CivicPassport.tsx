@@ -8,6 +8,9 @@ import {
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { VoterGuideGenerator } from "./VoterGuideGenerator";
+import { event } from "@/lib/analytics";
+import { savePassportProgress } from "@/lib/firestore";
+import { auth } from "@/lib/firebase-auth";
 
 export type BadgeType = "quiz" | "voice" | "checklist" | "ballot" | "myth" | "rights";
 
@@ -65,7 +68,6 @@ function triggerConfetti() {
   });
 }
 
-/** Call this from other components to award a badge */
 export function earnBadge(badgeId: BadgeType) {
   if (typeof window === "undefined") return;
   const saved: BadgeType[] = JSON.parse(localStorage.getItem("civiciq_badges") || "[]");
@@ -73,6 +75,15 @@ export function earnBadge(badgeId: BadgeType) {
     const updated = [...saved, badgeId];
     localStorage.setItem("civiciq_badges", JSON.stringify(updated));
     triggerConfetti();
+    
+    event('badge_earned', { category: 'gamification', label: badgeId });
+    
+    const user = auth.currentUser;
+    if (user) {
+      const score = Math.round((updated.length / 6) * 100);
+      savePassportProgress(user.uid, updated, score).catch(console.error);
+    }
+
     // Dispatch a storage event so CivicPassport re-reads on the same tab
     window.dispatchEvent(new Event("civiciq_badge_earned"));
   }

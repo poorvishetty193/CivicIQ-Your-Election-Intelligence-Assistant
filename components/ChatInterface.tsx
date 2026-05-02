@@ -9,6 +9,8 @@ import jsPDF from "jspdf";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { VoiceChat, speakText } from "./VoiceChat";
+import { event } from "@/lib/analytics";
+import { trackFeatureEvent } from "@/lib/firestore";
 
 const STARTER_QUESTIONS = [
   "How do I register to vote?",
@@ -63,6 +65,9 @@ export function ChatInterface() {
     setInput("");
     setIsLoading(true);
     setError(null);
+
+    event('chat_message_sent', { category: 'engagement', label: 'ai_chat' });
+    trackFeatureEvent('chat', 'session_' + Date.now().toString());
 
     try {
       const res = await fetch("/api/chat", {

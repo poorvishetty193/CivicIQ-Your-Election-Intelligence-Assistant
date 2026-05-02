@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "./ui/button";
 import { MessageSquare, RefreshCw } from "lucide-react";
+import { event } from "@/lib/analytics";
+import { trackFeatureEvent } from "@/lib/firestore";
 
 const MYTHS = [
   { myth: "My vote doesn't count because of the Electoral College.", fact: "Your vote directly decides which electors are chosen in your state, and local elections have no electoral college." },
@@ -29,6 +31,8 @@ export function MythBuster() {
         next.delete(index);
       } else {
         next.add(index);
+        event('myth_busted', { category: 'engagement', label: MYTHS[index].myth });
+        trackFeatureEvent('myth_buster', 'session_' + Date.now().toString());
       }
       return next;
     });

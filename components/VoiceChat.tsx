@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Mic, MicOff, Volume2 } from "lucide-react";
 import { Button } from "./ui/button";
+import { event } from "@/lib/analytics";
+import { trackFeatureEvent } from "@/lib/firestore";
 
 interface VoiceChatProps {
   onTranscript: (text: string) => void;
@@ -50,6 +52,8 @@ export function VoiceChat({ onTranscript, isProcessing }: VoiceChatProps) {
     } else {
       recognition?.start();
       setIsListening(true);
+      event('voice_chat_used', { category: 'feature', label: 'speech_recognition' });
+      trackFeatureEvent('voice_chat', 'session_' + Date.now().toString());
     }
   };
 

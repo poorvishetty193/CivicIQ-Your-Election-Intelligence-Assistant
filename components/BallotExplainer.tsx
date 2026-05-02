@@ -3,6 +3,9 @@
 import { useState } from "react";
 import { Button } from "./ui/button";
 import { Sparkles, AlertCircle } from "lucide-react";
+import { event } from "@/lib/analytics";
+import { saveBallotHistory, trackFeatureEvent } from "@/lib/firestore";
+import { useAuth } from "@/context/AuthContext";
 
 export function BallotExplainer() {
   const [ballotText, setBallotText] = useState("");
@@ -10,6 +13,7 @@ export function BallotExplainer() {
   const [complexity, setComplexity] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   const handleExplain = async () => {
     if (!ballotText.trim()) return;
@@ -29,6 +33,12 @@ export function BallotExplainer() {
       const data = await res.json();
       setExplanation(data.explanation);
       setComplexity(data.complexity);
+
+      event('ballot_explained', { category: 'feature', label: data.complexity });
+      trackFeatureEvent('ballot_explainer', 'session_' + Date.now().toString());
+      if (user) {
+        await saveBallotHistory(user.uid, ballotText, data.explanation);
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {

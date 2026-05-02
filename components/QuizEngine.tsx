@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "./ui/button"
-import { Trophy, CheckCircle2, XCircle, Share2, Award, ChevronRight } from "lucide-react"
+import { Trophy, CheckCircle2, XCircle, Share2, Award, ChevronRight, Users } from "lucide-react"
+import { saveQuizScore, getLeaderboard } from "@/lib/firestore"
+import { event } from "@/lib/analytics"
+import { useAuth } from "@/context/AuthContext"
 
 const QUESTIONS = [
   {
@@ -104,6 +107,8 @@ export function QuizEngine() {
   const [selectedOption, setSelectedOption] = useState<string | null>(null)
   const [isAnswered, setIsAnswered] = useState(false)
   const [personalBest, setPersonalBest] = useState(0)
+  const [leaderboard, setLeaderboard] = useState<any[]>([])
+  const { user } = useAuth()
 
   const [shuffledQuestions, setShuffledQuestions] = useState<typeof QUESTIONS>([])
 
@@ -126,6 +131,13 @@ export function QuizEngine() {
   if (shuffledQuestions.length === 0) return null // Wait for mount
 
 
+  const getBadge = (s: number) => {
+    const percent = (s / shuffledQuestions.length) * 100
+    if (percent === 100) return { title: "Democracy Champion", icon: <Trophy className="h-12 w-12 text-yellow-500" /> }
+    if (percent >= 70) return { title: "Civic Expert", icon: <Award className="h-12 w-12 text-blue-500" /> }
+    return { title: "Civic Novice", icon: <Award className="h-12 w-12 text-gray-500" /> }
+  }
+
   const handleAnswer = (option: string) => {
     if (isAnswered) return
     setSelectedOption(option)
@@ -135,21 +147,23 @@ export function QuizEngine() {
     }
   }
 
-  const nextQuestion = () => {
+  const nextQuestion = async () => {
     if (currentStep < shuffledQuestions.length - 1) {
       setCurrentStep(currentStep + 1)
       setSelectedOption(null)
       setIsAnswered(false)
     } else {
       setShowResult(true)
+      const badgeObj = getBadge(score)
+      try {
+        await saveQuizScore(user?.uid ?? null, score, badgeObj.title)
+        event('quiz_completed', { category: 'engagement', label: badgeObj.title, value: score })
+        const lb = await getLeaderboard()
+        setLeaderboard(lb)
+      } catch (err) {
+        console.error("Failed to process quiz completion", err)
+      }
     }
-  }
-
-  const getBadge = (s: number) => {
-    const percent = (s / shuffledQuestions.length) * 100
-    if (percent === 100) return { title: "Democracy Champion", icon: <Trophy className="h-12 w-12 text-yellow-500" /> }
-    if (percent >= 70) return { title: "Civic Expert", icon: <Award className="h-12 w-12 text-blue-500" /> }
-    return { title: "Civic Novice", icon: <Award className="h-12 w-12 text-gray-500" /> }
   }
 
   const handleShare = async () => {
@@ -196,6 +210,36 @@ export function QuizEngine() {
           <div className="mt-8 pt-8 border-t border-primary/10">
             <p className="text-sm text-primary/60 font-medium uppercase tracking-wider">Your Personal Best</p>
             <p className="text-2xl font-bold text-primary">{personalBest} / {shuffledQuestions.length}</p>
+          </div>
+        )}
+
+        {leaderboard.length > 0 && (
+          <div className="mt-8 pt-8 border-t border-primary/10">
+            <h3 className="text-xl font-bold mb-4 flex items-center justify-center gap-2">
+              <Users className="w-5 h-5" /> Live Leaderboard
+            </h3>
+            <div className="bg-bg rounded-lg overflow-hidden border border-primary/10">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-primary/5">
+                  <tr>
+                    <th className="p-3 font-medium">Rank</th>
+                    <th className="p-3 font-medium">User ID</th>
+                    <th className="p-3 font-medium text-right">Score</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {leaderboard.map((entry, idx) => (
+                    <tr key={idx} className="border-t border-primary/10">
+                      <td className="p-3 font-bold">{idx + 1}</td>
+                      <td className="p-3 font-mono text-xs opacity-70">
+                        {entry.uid === (user?.uid ?? 'anonymous') ? 'You' : entry.uid.slice(0, 8) + '...'}
+                      </td>
+                      <td className="p-3 text-right font-bold text-primary">{entry.score}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

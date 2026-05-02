@@ -164,17 +164,20 @@ Installable on iOS and Android. Offline fallback page. Full manifest with civic 
 
 ## 5. Google Services Used
 
-| Service | How It's Used |
-|---|---|
-| **Google Gemini 2.0 Flash** | Core AI: chat, translation, quiz explanations, ballot analysis, state rules, voter guide, rights summaries |
-| **Gemini Search Grounding** | Live election news feed with real-time web grounding — no news API needed |
-| **Google Maps JavaScript API** | Interactive polling place map |
-| **Google Places API** | Nearby polling location search by zip or geolocation |
-| **Google Maps Directions API** | Travel time and directions to polling places |
-| **Google Calendar (deep link)** | One-click "Add to Calendar" for all key election dates |
-| **Google Fonts** | DM Serif Display (headings) + DM Sans (body) |
-| **Web Speech API** | Voice input for hands-free chat (browser standard, Google-originated) |
-| **SpeechSynthesis API** | Text-to-speech for AI responses |
+| Service | Integration Type | Files |
+|---|---|---|
+| **Google Gemini 2.0 Flash** | `@google/generative-ai` SDK | `lib/gemini.ts`, all `/api/*` routes |
+| **Firebase Authentication** | `firebase/auth` + Admin SDK | `lib/firebase-auth.ts`, `lib/firebase-admin.ts`, `components/AuthButton.tsx`, `context/AuthContext.tsx`, `app/api/protected/route.ts` |
+| **Google Firestore** | `firebase/firestore` SDK | `lib/firestore.ts` — 4 collections: quiz_scores, passports, ballot_history, feature_events |
+| **Google Analytics 4** | `gtag.js` + typed `lib/analytics.ts` | `app/layout.tsx`, `components/GoogleAnalytics.tsx`, 9 tracked events |
+| **Google Maps JavaScript API** | `@googlemaps/js-api-loader` | `components/PollingMap.tsx` |
+| **Google Places API** | HTTP REST server-side | `app/api/places/route.ts` |
+| **Google Maps Directions API** | HTTP REST server-side | `app/api/directions/route.ts` |
+| **Google Translate API v2** | HTTP REST server-side | `app/api/translate/route.ts` |
+| **Google Cloud Text-to-Speech** | HTTP REST server-side | `app/api/tts/route.ts` |
+| **Google Calendar API** | OAuth 2.0 + `googleapis` SDK | `app/api/calendar/route.ts` |
+| **Gemini Search Grounding** | `tools: [{ googleSearch: {} }]` | `app/api/news/route.ts` |
+| **Google Fonts** | CSS `@import` | `app/layout.tsx` |
 
 ---
 
@@ -270,13 +273,41 @@ npm run start
 Create a `.env.local` file in the root directory:
 
 ```env
-# Required — Google Gemini API Key
-# Get yours free at https://ai.google.dev
+# Google Gemini (REQUIRED — server-side only, never use NEXT_PUBLIC prefix)
 GEMINI_API_KEY=your_gemini_api_key_here
 
-# Optional — Google Maps (for Polling Locator feature)
-# Get at https://console.cloud.google.com
-NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_maps_key_here
+# Google Maps — server-side (Places + Directions APIs)
+GOOGLE_MAPS_API_KEY=your_google_maps_server_key_here
+
+# Google Maps — client-side (Maps JavaScript API display)
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_client_key_here
+
+# Google Translate API
+GOOGLE_TRANSLATE_API_KEY=your_google_translate_key_here
+
+# Google Cloud Text-to-Speech
+GOOGLE_TTS_API_KEY=your_google_tts_key_here
+
+# Google Calendar OAuth 2.0
+GOOGLE_CALENDAR_CLIENT_ID=your_oauth_client_id_here
+GOOGLE_CALENDAR_CLIENT_SECRET=your_oauth_client_secret_here
+GOOGLE_CALENDAR_REDIRECT_URI=http://localhost:3000/api/calendar/callback
+
+# Google Analytics 4
+NEXT_PUBLIC_GA_MEASUREMENT_ID=G-XXXXXXXXXX
+
+# Firebase Client SDK
+NEXT_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key_here
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id_here
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_sender_id_here
+NEXT_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id_here
+
+# Firebase Admin SDK (server-side only — never use NEXT_PUBLIC prefix)
+FIREBASE_ADMIN_PROJECT_ID=your_project_id_here
+FIREBASE_ADMIN_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your_project.iam.gserviceaccount.com
+FIREBASE_ADMIN_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nyour_key_here\n-----END PRIVATE KEY-----\n"
 ```
 
 > ⚠️ **Security:** `GEMINI_API_KEY` is never exposed to the browser. It is only used in server-side API routes. Never prefix it with `NEXT_PUBLIC_`.
@@ -303,6 +334,9 @@ npm run lint
 
 | Test File | What It Covers |
 |---|---|
+| `tests/auth.test.ts` | Mock `firebase/auth` and verify `signInWithPopup`, mock `firebase-admin/auth` and test protected API route |
+| `tests/firestore.test.ts` | Verify operations for `saveQuizScore`, `getLeaderboard`, `savePassportProgress`, etc. |
+| `tests/analytics.test.ts` | Verify tracking `pageview` and `event` calls safely with or without `gtag.js` |
 | `tests/chat.test.ts` | Streaming response, rate limiting (429), input sanitization |
 | `tests/translate.test.ts` | All 8 languages, empty input handling |
 | `tests/quiz-explain.test.ts` | Correct/incorrect answer explanations |

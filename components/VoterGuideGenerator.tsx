@@ -4,6 +4,7 @@ import { useState } from "react";
 import { FileText, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import jsPDF from "jspdf";
+import { event } from "@/lib/analytics";
 
 export function VoterGuideGenerator({ state = "General U.S." }: { state?: string }) {
   const [loading, setLoading] = useState(false);
@@ -75,6 +76,7 @@ export function VoterGuideGenerator({ state = "General U.S." }: { state?: string
       doc.text(encouragementLines, 105, y, { align: "center" });
 
       doc.save("my-voter-guide.pdf");
+      event('voter_guide_downloaded', { category: 'feature', label: 'pdf' });
     } catch (e) {
       console.error(e);
       alert("Failed to generate Voter Guide.");

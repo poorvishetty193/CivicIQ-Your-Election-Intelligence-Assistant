@@ -5,8 +5,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import { X, Loader2 } from "lucide-react";
 import { Button } from "./ui/button";
 import dynamic from "next/dynamic";
-
 import React from "react";
+import { event } from "@/lib/analytics";
+import { trackFeatureEvent } from "@/lib/firestore";
 
 // eslint-disable-next-line
 const USAMap = dynamic(() => import("react-usa-map"), { ssr: false }) as React.ComponentType<any>;
@@ -42,6 +43,9 @@ export function StateExplorer() {
     setSelectedState({ id: abbr, name });
     setRules(null);
     setLoading(true);
+
+    event('state_rules_viewed', { category: 'feature', label: name });
+    trackFeatureEvent('state_explorer', 'session_' + Date.now().toString());
 
     const cacheKey = `state_${abbr}`;
     const cached = sessionStorage.getItem(cacheKey);

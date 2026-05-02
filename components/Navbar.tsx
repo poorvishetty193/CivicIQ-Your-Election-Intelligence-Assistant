@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { LanguageSelector } from "./LanguageSelector"
+import { AuthButton } from "./AuthButton"
 import { Landmark, Menu, X } from "lucide-react"
 import { useState } from "react"
 import { Button } from "./ui/button"
@@ -36,6 +37,7 @@ export function Navbar() {
             </Link>
           </div>
           <div className="h-4 w-px bg-primary/20 hidden md:block"></div>
+          <AuthButton />
           <LanguageSelector />
           <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
