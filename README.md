@@ -2,7 +2,7 @@
 
 > *Democracy works when you do.*
 
-![CivicIQ Banner](./public/og-image.png)
+<img width="1983" height="793" alt="ChatGPT Image May 2, 2026, 03_01_36 PM" src="https://github.com/user-attachments/assets/d298904f-cf44-4bb0-942d-97e4de7b6997" />
 
 [![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)](https://typescriptlang.org)
