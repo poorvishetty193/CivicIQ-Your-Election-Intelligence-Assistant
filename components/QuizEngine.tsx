@@ -152,9 +152,24 @@ export function QuizEngine() {
     return { title: "Civic Novice", icon: <Award className="h-12 w-12 text-gray-500" /> }
   }
 
-  const shareScore = () => {
-    alert("Score shared! (Image generation simulated)")
-  }
+  const handleShare = async () => {
+    const text = `I just scored ${score}/${shuffledQuestions.length} on the CivicIQ Knowledge Quiz! Can you beat my score?`;
+    const url = window.location.href;
+
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'My CivicIQ Quiz Score',
+          text,
+          url
+        });
+      } catch (err) {
+        console.error("Error sharing", err);
+      }
+    } else {
+      window.open(`https://x.com/intent/tweet?text=${encodeURIComponent(text + " " + url)}`, "_blank");
+    }
+  };
 
   if (showResult) {
     const badge = getBadge(score)
@@ -172,7 +187,7 @@ export function QuizEngine() {
 
         <div className="flex gap-4 justify-center">
           <Button onClick={() => window.location.reload()} variant="outline">Try Again</Button>
-          <Button onClick={shareScore} className="gap-2">
+          <Button onClick={handleShare} className="gap-2">
             <Share2 className="h-4 w-4" /> Share Score
           </Button>
         </div>
@@ -216,7 +231,7 @@ export function QuizEngine() {
                 onClick={() => handleAnswer(option)}
                 disabled={isAnswered}
                 className={`
-                  p-4 rounded-lg border-2 text-left transition-all flex justify-between items-center
+                  min-h-[44px] p-4 rounded-lg border-2 text-left transition-all flex justify-between items-center w-full
                   ${!isAnswered ? "border-primary/10 hover:border-primary/40 hover:bg-primary/5" : ""}
                   ${isCorrect ? "border-success bg-success/10 text-success font-bold" : ""}
                   ${isWrong ? "border-red-500 bg-red-500/10 text-red-500 font-bold" : ""}

@@ -24,7 +24,7 @@ export function PollingMap() {
           </div>
           <h2 className="text-3xl font-bold text-primary">Where do I vote?</h2>
           <p className="text-primary/70 leading-relaxed">
-            Polling locations are assigned based on your residential address. They can change between elections, so it's important to verify yours before heading out.
+            Polling locations are assigned based on your residential address. They can change between elections, so it&apos;s important to verify yours before heading out.
           </p>
           
           <ul className="space-y-4">
@@ -82,7 +82,7 @@ export function PollingMap() {
             <div className="flex gap-4 p-4 bg-primary/5 rounded-lg border border-primary/10">
               <Info className="h-5 w-5 text-primary shrink-0" />
               <p className="text-xs text-primary/70 italic">
-                Note: Polling places are typically managed at the county level. Always double-check your local election board's website for the most accurate information.
+                Note: Polling places are typically managed at the county level. Always double-check your local election board&apos;s website for the most accurate information.
               </p>
             </div>
           </div>

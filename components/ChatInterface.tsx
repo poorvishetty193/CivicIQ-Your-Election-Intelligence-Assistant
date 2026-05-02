@@ -1,13 +1,14 @@
-"use client"
+"use client";
 
-import { useRef, useEffect, useState } from "react"
-import { useChat } from "ai/react"
-import { Button } from "./ui/button"
-import { Input } from "./ui/input"
-import { Send, Copy, Download, Bot, User, Loader2, Volume2, VolumeX } from "lucide-react"
-import jsPDF from "jspdf"
-import ReactMarkdown from "react-markdown"
-import remarkGfm from "remark-gfm"
+import { useRef, useEffect, useState, FormEvent } from "react";
+import { useSearchParams } from "next/navigation";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Send, Copy, Download, Bot, User, Loader2, Volume2, VolumeX } from "lucide-react";
+import jsPDF from "jspdf";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import { VoiceChat, speakText } from "./VoiceChat";
 
 const STARTER_QUESTIONS = [
   "How do I register to vote?",
@@ -15,67 +16,126 @@ const STARTER_QUESTIONS = [
   "What is the Electoral College?",
   "How are votes counted?",
   "What is early voting?",
-]
+];
+
+type Message = {
+  id: string;
+  role: "user" | "model" | "assistant" | "system";
+  content: string;
+};
 
 export function ChatInterface() {
-  const { messages, input, handleInputChange, handleSubmit, append, isLoading, error } = useChat()
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const [ttsEnabled, setTtsEnabled] = useState(false)
+  const searchParams = useSearchParams();
+  const initialQuery = searchParams.get("q");
+
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [ttsEnabled, setTtsEnabled] = useState(false);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    scrollToBottom()
+    scrollToBottom();
+  }, [messages, isLoading]);
 
-    // Check if TTS is enabled in localStorage
-    const savedTts = localStorage.getItem("civiciq_a11y_tts") === "true"
-    setTtsEnabled(savedTts)
+  useEffect(() => {
+    const savedTts = localStorage.getItem("civiciq_a11y_tts") === "true";
+    setTtsEnabled(savedTts);
+  }, []);
 
-    // Read last assistant message if TTS is enabled
-    const lastMessage = messages[messages.length - 1]
-    if (savedTts && lastMessage?.role === "assistant" && !isLoading) {
-      speak(lastMessage.content)
+  useEffect(() => {
+    if (initialQuery && messages.length === 0) {
+      appendMessage(initialQuery);
     }
-  }, [messages, isLoading])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialQuery]);
 
-  const speak = (text: string) => {
-    if (!window.speechSynthesis) return
-    window.speechSynthesis.cancel()
-    const utterance = new SpeechSynthesisUtterance(text)
-    window.speechSynthesis.speak(utterance)
-  }
+  const appendMessage = async (text: string) => {
+    if (!text.trim()) return;
+    const userMsg: Message = { id: Date.now().toString(), role: "user", content: text };
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
+    setInput("");
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: newMessages }),
+      });
+
+      if (!res.ok) {
+        throw new Error(await res.text() || "An error occurred");
+      }
+
+      if (!res.body) throw new Error("No response body");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let assistantContent = "";
+
+      const assistantMsgId = (Date.now() + 1).toString();
+      setMessages(msgs => [...msgs, { id: assistantMsgId, role: "assistant", content: "" }]);
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        assistantContent += chunk;
+        setMessages(msgs => msgs.map(m => m.id === assistantMsgId ? { ...m, content: assistantContent } : m));
+      }
+
+      if (ttsEnabled) {
+        speakText(assistantContent);
+      }
+    } catch (err: any) {
+      setError(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    appendMessage(input);
+  };
 
   const stopAudio = () => {
-    if (!window.speechSynthesis) return
-    window.speechSynthesis.cancel()
-  }
+    if (!window.speechSynthesis) return;
+    window.speechSynthesis.cancel();
+  };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text)
-  }
+    navigator.clipboard.writeText(text);
+  };
 
   const exportPDF = () => {
-    const doc = new jsPDF()
-    let y = 10
-    doc.setFontSize(16)
-    doc.text("CivicIQ - Chat History", 10, y)
-    y += 10
-    doc.setFontSize(12)
+    const doc = new jsPDF();
+    let y = 10;
+    doc.setFontSize(16);
+    doc.text("CivicIQ - Chat History", 10, y);
+    y += 10;
+    doc.setFontSize(12);
 
     messages.forEach((m) => {
-      const prefix = m.role === "user" ? "You: " : "CivicIQ: "
-      const lines = doc.splitTextToSize(`${prefix}${m.content}`, 180)
+      const prefix = m.role === "user" ? "You: " : "CivicIQ: ";
+      const lines = doc.splitTextToSize(`${prefix}${m.content}`, 180);
       if (y + lines.length * 7 > 280) {
-        doc.addPage()
-        y = 10
+        doc.addPage();
+        y = 10;
       }
-      doc.text(lines, 10, y)
-      y += lines.length * 7 + 5
-    })
-    doc.save("civiciq-chat.pdf")
-  }
+      doc.text(lines, 10, y);
+      y += lines.length * 7 + 5;
+    });
+    doc.save("civiciq-chat.pdf");
+  };
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)] max-w-4xl mx-auto w-full bg-surface shadow-custom rounded-custom overflow-hidden border border-primary/10">
@@ -109,7 +169,7 @@ export function ChatInterface() {
               {STARTER_QUESTIONS.map((q) => (
                 <button
                   key={q}
-                  onClick={() => append({ role: "user", content: q })}
+                  onClick={() => appendMessage(q)}
                   className="px-4 py-2 bg-primary/5 hover:bg-primary/10 border border-primary/10 rounded-full text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-primary outline-none"
                 >
                   {q}
@@ -125,11 +185,11 @@ export function ChatInterface() {
                 m.role === "user" ? "flex-row-reverse" : "flex-row"
               }`}
             >
-              <div className={`shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${m.role === "user" ? "bg-accent text-primary" : "bg-primary text-white"}`}>
+              <div className={`shrink-0 h-10 w-10 rounded-full flex items-center justify-center ${m.role === "user" ? "bg-accent text-primary border-2 border-accent" : "bg-blue-600 text-white"}`}>
                 {m.role === "user" ? <User className="h-5 w-5" /> : <Bot className="h-5 w-5" />}
               </div>
               <div className={`relative group max-w-[80%] rounded-2xl p-4 ${
-                m.role === "user" ? "bg-primary text-white rounded-tr-sm" : "bg-bg text-text rounded-tl-sm border border-primary/10"
+                m.role === "user" ? "border-2 border-accent bg-transparent text-text rounded-tr-sm" : "bg-blue-50 text-blue-900 dark:bg-blue-950/30 dark:text-blue-100 rounded-tl-sm shadow-sm"
               }`}>
                 <div className="prose prose-sm md:prose-base dark:prose-invert max-w-none">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -146,7 +206,7 @@ export function ChatInterface() {
                       <Copy className="h-4 w-4" />
                     </button>
                     <button
-                      onClick={() => speak(m.content)}
+                      onClick={() => speakText(m.content)}
                       className="p-2 text-primary hover:bg-primary/10 rounded"
                       aria-label="Read aloud"
                     >
@@ -160,12 +220,12 @@ export function ChatInterface() {
         )}
         {isLoading && (
           <div className="flex gap-4">
-            <div className="shrink-0 h-10 w-10 rounded-full flex items-center justify-center bg-primary text-white">
+            <div className="shrink-0 h-10 w-10 rounded-full flex items-center justify-center bg-blue-600 text-white">
               <Bot className="h-5 w-5" />
             </div>
-            <div className="bg-bg text-text rounded-2xl rounded-tl-sm border border-primary/10 p-4 flex items-center gap-2">
-              <Loader2 className="h-5 w-5 animate-spin text-primary" />
-              <span className="text-sm text-primary/70">CivicIQ is thinking...</span>
+            <div className="bg-blue-50 text-blue-900 dark:bg-blue-950/30 dark:text-blue-100 rounded-2xl rounded-tl-sm p-4 flex items-center gap-2 shadow-sm">
+              <Loader2 className="h-5 w-5 animate-spin text-blue-600 dark:text-blue-400" />
+              <span className="text-sm font-medium">CivicIQ is thinking...</span>
             </div>
           </div>
         )}
@@ -185,9 +245,10 @@ export function ChatInterface() {
 
       <div className="p-4 bg-bg border-t border-primary/10">
         <form onSubmit={handleSubmit} className="flex gap-2">
+          <VoiceChat onTranscript={appendMessage} isProcessing={isLoading} />
           <Input
             value={input}
-            onChange={handleInputChange}
+            onChange={(e) => setInput(e.target.value)}
             placeholder="Ask a question about voting..."
             className="flex-1 bg-surface"
             disabled={isLoading}
@@ -199,5 +260,5 @@ export function ChatInterface() {
         </form>
       </div>
     </div>
-  )
+  );
 }

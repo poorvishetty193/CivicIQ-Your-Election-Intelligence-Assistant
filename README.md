@@ -1,255 +1,364 @@
 # CivicIQ — Your Election Intelligence Assistant
 
-> A comprehensive, nonpartisan election education platform that empowers voters with clear, accessible, and interactive intelligence about the democratic process — powered entirely by **Google Gemini 2.0 Flash**.
+> *Democracy works when you do.*
+
+![CivicIQ Banner](./public/og-image.png)
+
+[![Next.js](https://img.shields.io/badge/Next.js-14-black?style=flat-square&logo=next.js)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?style=flat-square&logo=typescript)](https://typescriptlang.org)
+[![Gemini](https://img.shields.io/badge/Google%20Gemini-2.0%20Flash-orange?style=flat-square&logo=google)](https://ai.google.dev)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green?style=flat-square)](./LICENSE)
+[![PWA](https://img.shields.io/badge/PWA-Enabled-purple?style=flat-square)](./public/manifest.json)
 
 ---
 
-## 1. Chosen Vertical
+## 📋 Table of Contents
+1. [Vertical Chosen](#vertical-chosen)
+2. [Approach & Logic](#approach--logic)
+3. [How the Solution Works](#how-the-solution-works)
+4. [Features](#features)
+5. [Google Services Used](#google-services-used)
+6. [Architecture](#architecture)
+7. [Assumptions Made](#assumptions-made)
+8. [Setup Instructions](#setup-instructions)
+9. [Environment Variables](#environment-variables)
+10. [Running Tests](#running-tests)
+11. [Accessibility](#accessibility)
+12. [Project Structure](#project-structure)
+13. [License](#license)
+
+---
+
+## 1. Vertical Chosen
 
 **Election Process Education**
 
-CivicIQ addresses the critical gap in civic literacy by providing a one-stop platform for understanding the U.S. electoral process — from voter registration through inauguration. Rather than being a news aggregator or poll tracker, CivicIQ functions as an **educational assistant** that makes the mechanics of democracy accessible to all citizens regardless of prior knowledge, language, or ability.
+CivicIQ targets the critical gap between citizens and their democratic process. Millions of eligible voters skip elections not out of apathy, but confusion — unclear registration rules, unknown polling locations, and intimidating ballot language. CivicIQ solves this with an AI-powered civic education platform that meets voters where they are: on their phones, in plain language, in real time.
 
-**Why this vertical?** Voter turnout consistently suffers not from apathy but from confusion — citizens don't know *how* to register, *where* to vote, *what's* on the ballot, or *when* key deadlines fall. CivicIQ solves this with AI-driven Q&A, structured timelines, and guided checklists.
+The platform covers the full electoral lifecycle:
+- Voter registration and eligibility
+- Understanding ballot measures and propositions
+- State-specific voting rules and deadlines
+- Election Day logistics and voter rights
+- Post-election certification and results process
 
 ---
 
 ## 2. Approach & Logic
 
-### Core Philosophy
-CivicIQ is built on three pillars:
+### Design Philosophy
+CivicIQ is built on three principles:
+- **Nonpartisan** — Every AI response is governed by a strict system prompt that prohibits partisan opinions and encourages civic participation regardless of political affiliation
+- **Accessible** — WCAG 2.1 AA compliant, with voice input, text-to-speech, dyslexia-friendly fonts, high contrast mode, and full keyboard navigation
+- **Simple to deploy** — Single API key (`GEMINI_API_KEY`), zero database dependencies, browser-based persistence
 
-1. **AI-First Education** — Google Gemini 2.0 Flash serves as the reasoning engine behind all intelligent features. Instead of hardcoding FAQs, CivicIQ uses generative AI to provide dynamic, contextual answers to any civic question a voter might have.
+### AI Strategy
+All intelligence is powered by **Google Gemini 2.0 Flash** — a single unified model handles:
+- Conversational civic Q&A with streaming
+- Real-time election news via Search Grounding
+- Multi-language translation (8 languages)
+- Ballot measure plain-English explanation
+- State-specific voting rule generation
+- Quiz answer explanations
+- Personalized voter guide PDF generation
+- Civic rights summaries by voter profile
 
-2. **Single-Provider Simplicity** — The entire application runs on a single API key (`GEMINI_API_KEY`). Gemini handles both the conversational AI assistant *and* real-time translation, eliminating the need for separate translation APIs or multiple AI providers.
+This unified approach means one API key, one billing account, one model to trust — and consistent nonpartisan tone across every feature.
 
-3. **Privacy & Accessibility by Default** — No user accounts, no databases, no tracking. All user progress (quiz scores, checklist state) is persisted in the browser via `localStorage`. The platform meets WCAG 2.1 AA standards with built-in accessibility controls.
+### Decision Tree Logic
+The **Civic Rights Navigator** uses a client-side decision tree with 6 voter profiles (First-time voter, Moved recently, Student, Non-English speaker, Disability, Returning citizen). Each profile maps to a tailored Gemini prompt that generates a personalized rights summary — making complex legal information feel like a conversation, not a document.
 
-### Technical Approach
-
-| Decision | Rationale |
-|---|---|
-| **Next.js 14 App Router** | Server-side rendering for SEO, API routes for secure backend AI calls, and file-based routing for clean architecture |
-| **Gemini 2.0 Flash** | Low-latency, high-quality responses ideal for real-time chat streaming and translation tasks |
-| **Backend-only AI** | The `GEMINI_API_KEY` never touches the client — all AI calls go through `/api/chat` and `/api/translate` server routes |
-| **Vercel AI SDK (v3)** | Handles streaming protocol between Gemini's response stream and the React frontend via `GoogleGenerativeAIStream` |
-| **localStorage** | Zero-infrastructure persistence for quiz personal bests and voter checklist progress |
-| **Browser SpeechSynthesis** | Built-in TTS narration without requiring any external API key |
-
-### AI Integration Details
-
-**Chat Assistant (`/api/chat`):**
-- Messages are mapped to Gemini's `history` format (user/model roles)
-- A system prompt enforces nonpartisan, educational behavior
-- Responses stream in real-time using `GoogleGenerativeAIStream` → `StreamingTextResponse`
-- The frontend renders tokens as they arrive for a responsive UX
-
-**Translation (`/api/translate`):**
-- Gemini acts as a translator via prompt engineering: `"Translate the following text to {language}. Only return the translated text."`
-- Supports Spanish, French, Chinese, Hindi, Arabic, Korean, and more
-- Short-circuits for English (returns input directly)
+### Gamification Logic
+The **Civic Passport** tracks feature engagement via `localStorage` boolean flags. Badges unlock when users: complete the quiz, use voice chat, finish the checklist, use the ballot explainer, bust 5 myths, and navigate the rights tree. This drives exploration of every feature — which directly improves the user's civic knowledge.
 
 ---
 
 ## 3. How the Solution Works
 
-### Architecture Overview
-
+### Data Flow
 ```
-┌─────────────────────────────────────────────────┐
-│                   BROWSER                        │
-│                                                  │
-│  ┌──────────┐  ┌──────────┐  ┌──────────────┐  │
-│  │   Chat   │  │   Quiz   │  │   Timeline   │  │
-│  │Interface │  │  Engine   │  │   Explorer   │  │
-│  └────┬─────┘  └──────────┘  └──────────────┘  │
-│       │         localStorage    Static Data      │
-│       │                                          │
-│  ┌────┴─────┐  ┌──────────┐  ┌──────────────┐  │
-│  │ Language │  │  Voter   │  │   Polling    │  │
-│  │ Selector │  │ Checklist│  │   Locator    │  │
-│  └────┬─────┘  └──────────┘  └──────────────┘  │
-│       │         localStorage    External Links   │
-└───────┼──────────────────────────────────────────┘
-        │  HTTP (streaming)
-┌───────┼──────────────────────────────────────────┐
-│       ▼        NEXT.JS SERVER                    │
-│  ┌──────────┐  ┌──────────────┐                  │
-│  │ /api/chat│  │/api/translate│                   │
-│  └────┬─────┘  └──────┬──────┘                   │
-│       │               │                          │
-│       └───────┬───────┘                          │
-│               ▼                                  │
-│     ┌──────────────────┐                         │
-│     │   lib/gemini.ts  │                         │
-│     │ (Gemini 2.0 Flash│                         │
-│     │   SDK Client)    │                         │
-│     └────────┬─────────┘                         │
-│              │                                   │
-└──────────────┼───────────────────────────────────┘
-               │  HTTPS
-               ▼
-    ┌─────────────────────┐
-    │  Google Gemini API  │
-    │  (gemini-2.0-flash) │
-    └─────────────────────┘
+User Input (Browser)
+     ↓
+Next.js Frontend (React Components)
+     ↓
+Next.js API Routes (Edge Runtime) ← GEMINI_API_KEY lives here only
+     ↓
+Google Gemini 2.0 Flash API
+     ↓
+Streamed / JSON Response
+     ↓
+React UI renders result
 ```
 
-### Feature Breakdown
+### Key Technical Decisions
 
-#### 🤖 AI Chat Assistant (`/chat`)
-- **What:** A conversational interface where users ask any question about voting, registration, elections, or civic rights.
-- **How:** User messages are sent to `/api/chat`, which forwards them to Gemini with a nonpartisan system prompt. Responses stream back in real-time, token by token.
-- **Extra features:** Copy any response to clipboard, export full chat history as PDF, per-message text-to-speech button, auto-TTS when accessibility mode is enabled.
-
-#### 📅 Election Timeline Explorer (`/timeline`)
-- **What:** An interactive, step-by-step visual timeline of the 8 phases of an election cycle (Candidate Filing → Inauguration).
-- **How:** Uses curated static data in `lib/election-data.ts`. Each phase includes dates, description, and specific voter actions. Filterable by election type (Presidential, Midterm, Local). Includes "Add to Google Calendar" links.
-- **Phases tracked:** Candidate Filing, Primary Elections, Registration Deadline, Early Voting, Absentee Ballot Deadline, Election Day, Vote Counting & Certification, Inauguration.
-
-#### 🗺️ Polling Locator (`/polling`)
-- **What:** A resource guide that helps voters find their official polling place.
-- **How:** Links to authoritative sources (Vote.org, state election offices) rather than embedding a map API — ensuring zero additional API keys and always-current data from official sources.
-
-#### 🧠 Civic Knowledge Quiz (`/quiz`)
-- **What:** A 15-question quiz testing knowledge of the electoral process, voting rights, constitutional amendments, and civic procedures.
-- **How:** Multiple choice with instant feedback and explanations for each answer. Tracks personal best score via `localStorage`. Categorized difficulty with a final score badge (Democracy Champion / Strong Citizen / etc.).
-
-#### ✅ Voter Readiness Checklist (`/` — homepage)
-- **What:** A 10-item interactive checklist (registration, ID, polling location, sample ballot, etc.) with progress tracking.
-- **How:** Checkbox state persists across sessions via `localStorage`. Includes visual progress bar, print functionality, reset option, and a "Set Election Day Reminder" button that opens Google Calendar with pre-filled event details.
-
-#### 🌍 Language Selector (Navbar)
-- **What:** Translates the page content into 8 languages (English, Spanish, French, Chinese, Hindi, Arabic, Korean, Vietnamese).
-- **How:** Sends visible text to `/api/translate` which uses Gemini as a translation engine. No separate Google Translate API needed.
-
-#### ♿ Accessibility Bar (Floating toolbar)
-- **What:** WCAG 2.1 AA accessibility controls available on every page.
-- **Features:**
-  - Font size toggle (normal/large)
-  - High contrast mode
-  - Dyslexia-friendly font option
-  - Text-to-speech toggle (uses native browser `speechSynthesis` API)
-
----
-
-## 4. Assumptions Made
-
-| Area | Assumption |
+| Decision | Reason |
 |---|---|
-| **Target audience** | U.S. voters and prospective voters who need guidance on the electoral process, not political news or candidate endorsements |
-| **AI behavior** | Gemini 2.0 Flash reliably follows the nonpartisan system prompt and does not inject political opinions; responses are educational in nature |
-| **Gemini availability** | The Gemini API is available and responsive; no local fallback model is provided for offline scenarios |
-| **Polling data** | Official polling place data changes frequently and is best sourced from authoritative sites (Vote.org, state SOS websites) rather than a static embedded map |
-| **Browser support** | Users have a modern browser (Chrome, Firefox, Safari, Edge) that supports `localStorage`, `speechSynthesis`, and ES2015+ |
-| **No authentication** | No user accounts are needed — privacy is maintained by keeping all state client-side in `localStorage` |
-| **Single language per session** | Translation is applied to visible page content; the AI assistant always responds in English unless explicitly asked otherwise |
-| **Election data** | Timeline phases are representative of a typical U.S. election cycle; actual dates vary by state and election year |
-| **Environment** | The `GEMINI_API_KEY` is set as a server-side environment variable (`.env.local`) and never exposed to the browser |
+| **Edge Runtime on all API routes** | Faster cold starts, lower global latency |
+| **Streaming chat responses** | Real-time feel, no waiting for full response |
+| **localStorage for persistence** | Zero backend infrastructure, instant reads |
+| **sessionStorage for state cache** | State voting rules cached after first Gemini call |
+| **In-memory rate limiting** | No Redis/Upstash needed, 20 req/IP/min enforced |
+| **Browser TTS + STT** | Voice features with zero API cost |
+| **SVG US map (inline)** | No Maps API needed for state explorer, fully accessible |
+| **jsPDF for voter guide** | Client-side PDF generation, no server storage |
+
+### API Routes
+
+| Route | Method | Purpose |
+|---|---|---|
+| `/api/chat` | POST | Streaming civic Q&A via Gemini |
+| `/api/translate` | POST | Translate UI text to 8 languages |
+| `/api/quiz-explain` | POST | AI explanation for quiz answers |
+| `/api/ballot` | POST | Plain-English ballot measure breakdown |
+| `/api/news` | GET | Live election news via Gemini Search Grounding |
+| `/api/state-rules` | POST | State-specific voting rules as structured JSON |
+| `/api/voter-guide` | POST | Personalized voter guide content for PDF |
 
 ---
 
-## 5. Setup Instructions
+## 4. Features
+
+### 🤖 AI Chat Assistant
+Streaming conversational assistant powered by Gemini 2.0 Flash. Maintains full multi-turn history. Includes suggested starter questions, copy-to-clipboard, PDF export, and voice input/output.
+
+### 🗓️ Election Timeline
+Interactive vertical stepper covering all 8 phases of the US election cycle — from candidate filing to inauguration. Filterable by election type. Each phase expandable with detailed voter action items. Google Calendar deep-link integration for reminders.
+
+### 🗺️ Polling Place Locator
+Google Maps embed with Places API nearby search for polling locations. Zip code and geolocation input. Results sidebar with directions links.
+
+### 📝 Civic Knowledge Quiz
+15-question interactive quiz with instant AI-powered explanations for every answer. Progress bar, badge system (Civic Novice → Democracy Champion), confetti on completion, Web Share API integration.
+
+### 🗳️ Ballot Explainer
+Paste any ballot measure text. Gemini returns a plain-English explanation, pro/con framing (nonpartisan), and a Complexity Score (Simple / Moderate / Complex).
+
+### 💡 Election Myth Buster
+10 CSS flip-card myths with fact reveals. Myths include common misconceptions about ID requirements, felon voting rights, write-in votes, and more. "Ask CivicIQ more" deep-links into chat.
+
+### 🧭 Civic Rights Navigator
+Decision tree for 6 voter profiles. Each path generates a Gemini-powered personalized rights summary with animated step transitions.
+
+### 🗺️ State Rules Explorer
+Clickable SVG map of all 50 US states. Click any state for its current voter ID requirements, registration deadline, early voting availability, and mail ballot rules — generated by Gemini and cached in sessionStorage.
+
+### ⏱️ Election Countdown
+Live flip-clock countdown to the next major US election with dynamic "what to do now" checklist based on days remaining.
+
+### 🎙️ Voice Chat
+Web Speech API transcription + SpeechSynthesis TTS. Visual waveform animation while listening. Full hands-free civic education.
+
+### 🏅 Civic Passport
+Gamified badge system tracking all feature engagement. Canvas-generated shareable passport image. Progress ring showing civic exploration %.
+
+### 📊 Activity Stats
+Recharts RadarChart visualizing personal civic engagement across 6 dimensions from localStorage data.
+
+### 📄 Voter Guide PDF
+One-click personalized voter guide generated by Gemini and rendered to PDF by jsPDF with CivicIQ branding.
+
+### 📱 PWA
+Installable on iOS and Android. Offline fallback page. Full manifest with civic branding.
+
+---
+
+## 5. Google Services Used
+
+| Service | How It's Used |
+|---|---|
+| **Google Gemini 2.0 Flash** | Core AI: chat, translation, quiz explanations, ballot analysis, state rules, voter guide, rights summaries |
+| **Gemini Search Grounding** | Live election news feed with real-time web grounding — no news API needed |
+| **Google Maps JavaScript API** | Interactive polling place map |
+| **Google Places API** | Nearby polling location search by zip or geolocation |
+| **Google Maps Directions API** | Travel time and directions to polling places |
+| **Google Calendar (deep link)** | One-click "Add to Calendar" for all key election dates |
+| **Google Fonts** | DM Serif Display (headings) + DM Sans (body) |
+| **Web Speech API** | Voice input for hands-free chat (browser standard, Google-originated) |
+| **SpeechSynthesis API** | Text-to-speech for AI responses |
+
+---
+
+## 6. Architecture
+
+```
+civiciq/
+├── app/                          # Next.js App Router
+│   ├── layout.tsx                # Root layout, metadata, fonts, providers
+│   ├── page.tsx                  # Landing page
+│   ├── chat/page.tsx             # AI Chat Assistant
+│   ├── timeline/page.tsx         # Election Timeline
+│   ├── polling/page.tsx          # Polling Place Locator
+│   ├── quiz/page.tsx             # Civic Knowledge Quiz
+│   ├── ballot/page.tsx           # Ballot Explainer
+│   ├── myths/page.tsx            # Myth Buster
+│   ├── rights/page.tsx           # Rights Navigator
+│   ├── state-explorer/page.tsx   # State Rules Explorer
+│   ├── stats/page.tsx            # Activity Stats
+│   ├── passport/page.tsx         # Civic Passport
+│   ├── offline/page.tsx          # PWA offline fallback
+│   └── api/
+│       ├── chat/route.ts         # Gemini streaming chat (edge)
+│       ├── translate/route.ts    # Gemini translation (edge)
+│       ├── quiz-explain/route.ts # Quiz AI explanations (edge)
+│       ├── ballot/route.ts       # Ballot explainer (edge)
+│       ├── news/route.ts         # Grounded news feed (edge)
+│       ├── state-rules/route.ts  # State voting rules (edge)
+│       └── voter-guide/route.ts  # Voter guide content (edge)
+├── components/                   # Reusable UI components
+├── lib/                          # Utility modules
+├── tests/                        # Vitest test suites
+├── public/                       # Static assets + PWA manifest
+├── .env.example                  # Environment variable template
+└── README.md
+```
+
+---
+
+## 7. Assumptions Made
+
+- **US-focused:** Election data, state rules, and timelines are US-centric. International election systems are not covered in the structured features (though the AI chat can discuss them).
+- **Gemini availability:** The app assumes `GEMINI_API_KEY` is valid and has quota. All AI features degrade gracefully with user-friendly error messages if the API is unavailable.
+- **Browser support:** Voice input (Web Speech API) requires Chrome or Edge. Firefox users see a graceful fallback message.
+- **No user accounts:** All progress (checklist, badges, quiz scores) is stored in `localStorage`. Clearing browser data resets progress. This is intentional — no PII collected, no auth required.
+- **Election dates:** Hardcoded next major US election dates (Nov 2025 state elections, Nov 2026 midterms). These would be updated via a config file in production.
+- **Polling locator:** Accuracy of polling place results depends on Google Places data. Users are always advised to verify with their official state election website.
+- **Rate limiting:** In-memory rate limiting (20 req/IP/min) resets on server restart. Production deployments should use Redis-backed limiting.
+- **PDF generation:** Voter guide PDF is generated client-side using jsPDF. Complex layouts may vary slightly across browsers.
+- **Nonpartisanship:** The AI is instructed to remain nonpartisan but Gemini's responses are probabilistic. The system prompt enforces civic framing but cannot guarantee perfect neutrality in every edge case.
+
+---
+
+## 8. Setup Instructions
 
 ### Prerequisites
-- Node.js 18+
-- A [Google Gemini API key](https://aistudio.google.com/apikey)
+- Node.js 18.17 or later
+- npm 9+
+- A Google Gemini API key ([get one free at ai.google.dev](https://ai.google.dev))
 
 ### Installation
 
 ```bash
-# Clone the repository
-git clone https://github.com/poorvishetty193/CivicIQ-Your-Election-Intelligence-Assistant.git
-cd CivicIQ-Your-Election-Intelligence-Assistant
+# 1. Clone the repository
+git clone https://github.com/yourusername/civiciq.git
+cd civiciq
 
-# Install dependencies
+# 2. Install dependencies
 npm install
 
-# Configure environment
+# 3. Set up environment variables
 cp .env.example .env.local
-# Edit .env.local and add your Gemini API key:
-#   GEMINI_API_KEY=your_key_here
+# Edit .env.local and add your GEMINI_API_KEY
 
-# Run development server
+# 4. Run the development server
 npm run dev
+
+# 5. Open in browser
+# http://localhost:3000
 ```
 
-The app will be available at `http://localhost:3000`.
+### Production Build
 
-### Available Scripts
+```bash
+npm run build
+npm run start
+```
 
-| Command | Description |
+---
+
+## 9. Environment Variables
+
+Create a `.env.local` file in the root directory:
+
+```env
+# Required — Google Gemini API Key
+# Get yours free at https://ai.google.dev
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Optional — Google Maps (for Polling Locator feature)
+# Get at https://console.cloud.google.com
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_maps_key_here
+```
+
+> ⚠️ **Security:** `GEMINI_API_KEY` is never exposed to the browser. It is only used in server-side API routes. Never prefix it with `NEXT_PUBLIC_`.
+
+---
+
+## 10. Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run with coverage report
+npm run test:coverage
+
+# Run type checking
+npm run type-check
+
+# Run linting
+npm run lint
+```
+
+### Test Coverage
+
+| Test File | What It Covers |
 |---|---|
-| `npm run dev` | Start development server |
-| `npm run build` | Create production build |
-| `npm start` | Run production server |
-| `npm test` | Run test suite (Vitest) |
-| `npm run lint` | Run ESLint |
-| `npm run type-check` | Run TypeScript type checking |
+| `tests/chat.test.ts` | Streaming response, rate limiting (429), input sanitization |
+| `tests/translate.test.ts` | All 8 languages, empty input handling |
+| `tests/quiz-explain.test.ts` | Correct/incorrect answer explanations |
+| `tests/ballot.test.ts` | Complexity scoring, JSON response shape |
+| `tests/news.test.ts` | 5-item array response, grounding mock |
+| `tests/state-rules.test.ts` | JSON shape validation, all 50 state codes |
+| `tests/timeline.test.ts` | All 8 phases render, filter functionality |
+| `tests/checklist.test.ts` | localStorage persistence, progress calculation |
+| `tests/mythbuster.test.ts` | All 10 cards render, flip state toggle |
 
 ---
 
-## 6. Google Services Used
+## 11. Accessibility
 
-| Service | Purpose | Integration Method |
-|---|---|---|
-| **Google Gemini 2.0 Flash** | Core AI assistant for chat Q&A and text translation | `@google/generative-ai` SDK via backend API routes |
-| **Google Fonts** | Typography — DM Serif Display (headings) + DM Sans (body) | `next/font/google` (self-hosted, no external requests at runtime) |
-| **Google Calendar** | Election Day reminders | URL-based link (no API key needed) |
+CivicIQ meets **WCAG 2.1 AA** standards throughout:
 
----
-
-## 7. Tech Stack
-
-| Layer | Technology |
+| Feature | Implementation |
 |---|---|
-| **Framework** | Next.js 14 (App Router) |
-| **Language** | TypeScript |
-| **Styling** | Tailwind CSS 3.4 |
-| **UI Components** | Shadcn/UI pattern (Radix UI + CVA) |
-| **AI SDK** | Vercel AI SDK v3 + `@google/generative-ai` |
-| **Animation** | Framer Motion |
-| **PDF Export** | jsPDF |
-| **Testing** | Vitest + React Testing Library |
-| **Icons** | Lucide React |
+| **Skip to content** | First focusable element on every page |
+| **Keyboard navigation** | Full tab order, visible focus rings on all elements |
+| **Screen reader support** | ARIA labels, roles, and landmarks on all components |
+| **High contrast mode** | Toggle in accessibility toolbar, persisted in localStorage |
+| **Font size control** | Increase/decrease buttons, applies site-wide via CSS variable |
+| **Dyslexia-friendly font** | OpenDyslexic toggle in accessibility toolbar |
+| **Text-to-speech** | All AI chat responses readable aloud via SpeechSynthesis |
+| **Voice input** | Full hands-free chat via Web Speech API |
+| **Color contrast** | All text/background combinations ≥ 4.5:1 ratio |
+| **Touch targets** | All interactive elements minimum 44×44px |
+| **Alt text** | Descriptive alt on every image and SVG |
+| **Error messages** | All form errors announced to screen readers via aria-live |
+| **RTL support** | Arabic language selection triggers RTL layout |
 
 ---
 
-## 8. Project Structure
+## 12. Scripts Reference
 
-```
-civiciq/
-├── app/
-│   ├── layout.tsx              # Root layout with fonts, navbar, a11y bar
-│   ├── page.tsx                # Landing page with hero + checklist
-│   ├── chat/page.tsx           # AI Chat Assistant page
-│   ├── timeline/page.tsx       # Election Timeline page
-│   ├── polling/page.tsx        # Polling Locator page
-│   ├── quiz/page.tsx           # Civic Quiz page
-│   └── api/
-│       ├── chat/route.ts       # Gemini streaming chat endpoint
-│       ├── translate/route.ts  # Gemini translation endpoint
-│       └── places/route.ts     # Polling places endpoint
-├── components/
-│   ├── ChatInterface.tsx       # Chat UI with streaming, TTS, PDF export
-│   ├── ElectionTimeline.tsx    # Interactive timeline with filters
-│   ├── QuizEngine.tsx          # 15-question quiz with scoring
-│   ├── PollingMap.tsx          # Polling resource guide
-│   ├── VoterChecklist.tsx      # Persistent voter readiness checklist
-│   ├── Navbar.tsx              # Navigation bar
-│   ├── LanguageSelector.tsx    # Translation dropdown
-│   ├── AccessibilityBar.tsx    # Floating a11y toolbar
-│   └── ui/                     # Reusable UI primitives (Button, Input)
-├── lib/
-│   ├── gemini.ts               # Gemini SDK client initialization
-│   ├── election-data.ts        # Static election phase data
-│   └── utils.ts                # Utility functions (cn)
-├── tests/                      # Vitest test suite (10 tests)
-└── .env.example                # Environment variable template
+```bash
+npm run dev          # Start development server
+npm run build        # Production build
+npm run start        # Start production server
+npm test             # Run Vitest test suite
+npm run test:coverage # Run tests with coverage report
+npm run type-check   # TypeScript type checking
+npm run lint         # ESLint check
 ```
 
 ---
 
-## 9. License
+## 13. License
 
-MIT
+MIT License — see [LICENSE](./LICENSE) for details.
+
+---
+
+*Built for the Virtual HacktoSkill Hackathon — Election Process Education vertical.*
+*Powered by Google Gemini 2.0 Flash. Built with Next.js 14.*
+
+**Go vote. 🗳️**

@@ -1,24 +1,39 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi } from 'vitest';
+import { POST } from '../app/api/translate/route';
 
-// Mock Gemini
-vi.mock('@/lib/gemini', () => ({
-  geminiModel: {
-    generateContent: vi.fn(() => 
-      Promise.resolve({
-        response: { text: () => 'Hola' }
+vi.mock('@/lib/gemini', () => {
+  return {
+    geminiFlash: {
+      generateContent: vi.fn().mockResolvedValue({
+        response: {
+          text: () => "Hola"
+        }
       })
-    )
-  }
-}))
+    }
+  };
+});
 
-// Mock API route or direct function if I were testing the helper, 
-// but here I'll just check if the logic is correct.
-// Since I refactored the API route directly, I'll test the logic.
+describe('Translate API Route', () => {
+  it('should translate text successfully', async () => {
+    const req = new Request('http://localhost/api/translate', {
+      method: 'POST',
+      body: JSON.stringify({ text: 'Hello', targetLang: 'es' })
+    });
 
-describe('Gemini Translation Logic', () => {
-  it('would return translated text', async () => {
-    const { geminiModel } = await import('@/lib/gemini')
-    const result = await geminiModel.generateContent('Translate Hello to Spanish')
-    expect(result.response.text()).toBe('Hola')
-  })
-})
+    const res = await POST(req);
+    const data = await res.json();
+    
+    expect(res.status).toBe(200);
+    expect(data.translatedText).toBe("Hola");
+  });
+
+  it('should return 400 if parameters are missing', async () => {
+    const req = new Request('http://localhost/api/translate', {
+      method: 'POST',
+      body: JSON.stringify({})
+    });
+
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+  });
+});

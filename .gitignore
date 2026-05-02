@@ -40,8 +40,8 @@ yarn-error.log*
 .env.production.local
 .env*.local
 
-# DO NOT ignore .env.example (it's a template)
-!.env.example
+# Ignore .env.example
+.env.example
 
 # Vercel
 .vercel

@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { ChatInterface } from "@/components/ChatInterface"
 import { Metadata } from "next"
 
@@ -16,7 +17,9 @@ export default function ChatPage() {
           Ask our AI assistant for clear, unbiased information.
         </p>
       </div>
-      <ChatInterface />
+      <Suspense fallback={<div className="flex-1 flex items-center justify-center text-primary/50">Loading chat...</div>}>
+        <ChatInterface />
+      </Suspense>
     </div>
   )
 }
