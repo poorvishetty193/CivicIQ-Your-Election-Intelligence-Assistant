@@ -9,7 +9,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig = {
-  output: "standalone",
+  // output: "standalone",
 };
 
 export default withPWA(nextConfig);

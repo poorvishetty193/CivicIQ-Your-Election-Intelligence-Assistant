@@ -90,22 +90,28 @@ export function LiveNewsFeed() {
       </div>
       
       <div className="flex overflow-x-auto gap-4 pb-4 px-4 snap-x snap-mandatory hide-scrollbar">
-        {news.map((item, i) => (
-          <a
-            key={i}
-            href={item.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="min-w-[280px] md:min-w-[320px] bg-surface border border-primary/10 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-accent/50 transition-all snap-start flex flex-col group"
-          >
-            <div className="flex justify-between items-start mb-2">
-              <span className="text-xs font-bold text-primary/50 uppercase tracking-wider">{item.source}</span>
-              <ExternalLink className="w-4 h-4 text-primary/30 group-hover:text-accent transition-colors shrink-0" />
-            </div>
-            <h4 className="font-bold text-base mb-2 line-clamp-2 leading-tight">{item.title}</h4>
-            <p className="text-sm text-primary/70 line-clamp-3 mt-auto">{item.summary}</p>
-          </a>
-        ))}
+        {news.map((item, i) => {
+          const safeUrl = typeof item.url === 'string' && (item.url.startsWith('http://') || item.url.startsWith('https://'))
+            ? item.url
+            : 'https://www.vote.org';
+
+          return (
+            <a
+              key={i}
+              href={safeUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="min-w-[280px] md:min-w-[320px] bg-surface border border-primary/10 rounded-xl p-5 shadow-sm hover:shadow-md hover:border-accent/50 transition-all snap-start flex flex-col group"
+            >
+              <div className="flex justify-between items-start mb-2">
+                <span className="text-xs font-bold text-primary/50 uppercase tracking-wider">{item.source}</span>
+                <ExternalLink className="w-4 h-4 text-primary/30 group-hover:text-accent transition-colors shrink-0" />
+              </div>
+              <h4 className="font-bold text-base mb-2 line-clamp-2 leading-tight">{item.title}</h4>
+              <p className="text-sm text-primary/70 line-clamp-3 mt-auto">{item.summary}</p>
+            </a>
+          );
+        })}
       </div>
     </div>
   );
