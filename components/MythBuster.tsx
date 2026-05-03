@@ -50,13 +50,13 @@ export function MythBuster() {
         <p className="text-primary/60 text-sm">Tap a card to reveal the fact</p>
       </div>
 
-      <div className="flex overflow-x-auto gap-6 pb-8 px-4 snap-x snap-mandatory hide-scrollbar">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 px-4 pb-4">
         {MYTHS.map((item, index) => {
           const isFlipped = flippedCards.has(index);
           return (
             <div
               key={index}
-              className="card-scene min-w-[300px] w-[300px] h-[380px] snap-center cursor-pointer shrink-0"
+              className="card-scene w-full h-[380px] cursor-pointer"
               onClick={() => toggleFlip(index)}
               role="button"
               aria-label={isFlipped ? `Flip back: ${item.myth}` : `Reveal fact: ${item.myth}`}

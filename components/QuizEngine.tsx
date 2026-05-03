@@ -251,6 +251,7 @@ export function QuizEngine() {
 
   return (
     <div className="max-w-3xl mx-auto w-full bg-surface rounded-custom shadow-custom border border-primary/10 overflow-hidden">
+      {/* Progress bar */}
       <div className="h-2 bg-primary/10 w-full">
         <div 
           className="h-full bg-primary transition-all duration-500" 
@@ -258,10 +259,10 @@ export function QuizEngine() {
         />
       </div>
 
-      <div className="p-8 md:p-12">
-        <div className="mb-8">
+      <div className="p-5 md:p-12">
+        <div className="mb-6">
           <span className="text-sm font-bold text-primary/50 uppercase tracking-widest">Question {currentStep + 1} of {shuffledQuestions.length}</span>
-          <h2 className="text-2xl md:text-3xl font-bold mt-2 leading-tight">{q.question}</h2>
+          <h2 className="font-bold mt-2 leading-tight" style={{ fontSize: 'clamp(1rem, 4vw, 1.5rem)' }}>{q.question}</h2>
         </div>
 
         <div className="grid grid-cols-1 gap-4 mb-8">
@@ -275,12 +276,13 @@ export function QuizEngine() {
                 onClick={() => handleAnswer(option)}
                 disabled={isAnswered}
                 className={`
-                  min-h-[44px] p-4 rounded-lg border-2 text-left transition-all flex justify-between items-center w-full
+                  min-h-[56px] p-4 rounded-lg border-2 text-left transition-all flex justify-between items-center w-full
                   ${!isAnswered ? "border-primary/10 hover:border-primary/40 hover:bg-primary/5" : ""}
                   ${isCorrect ? "border-success bg-success/10 text-success font-bold" : ""}
                   ${isWrong ? "border-red-500 bg-red-500/10 text-red-500 font-bold" : ""}
                   ${isAnswered && option !== q.answer && option !== selectedOption ? "opacity-50" : ""}
                 `}
+                style={{ fontSize: 'clamp(0.875rem, 3vw, 1rem)' }}
               >
                 <span>{option}</span>
                 {isCorrect && <CheckCircle2 className="h-5 w-5" />}

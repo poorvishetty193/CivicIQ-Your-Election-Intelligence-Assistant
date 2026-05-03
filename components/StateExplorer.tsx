@@ -8,6 +8,8 @@ import dynamic from "next/dynamic";
 import React from "react";
 import { event } from "@/lib/analytics";
 import { trackFeatureEvent } from "@/lib/firestore";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { generateSessionId } from "@/lib/utils";
 
 // eslint-disable-next-line
 const USAMap = dynamic(() => import("react-usa-map"), { ssr: false }) as React.ComponentType<any>;
@@ -37,6 +39,8 @@ export function StateExplorer() {
   const [selectedState, setSelectedState] = useState<{ id: string; name: string } | null>(null);
   const [rules, setRules] = useState<StateRules | null>(null);
   const [loading, setLoading] = useState(false);
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const sessionId = React.useRef(generateSessionId());
 
   const fetchRules = async (abbr: string) => {
     const name = US_STATES[abbr] || abbr;
@@ -45,7 +49,7 @@ export function StateExplorer() {
     setLoading(true);
 
     event('state_rules_viewed', { category: 'feature', label: name });
-    trackFeatureEvent('state_explorer', 'session_' + Date.now().toString());
+    trackFeatureEvent('state_explorer', sessionId.current);
 
     const cacheKey = `state_${abbr}`;
     const cached = sessionStorage.getItem(cacheKey);
@@ -85,28 +89,30 @@ export function StateExplorer() {
         <p className="text-primary/70">Select your state to instantly see its voting rules.</p>
       </div>
 
-      {/* Desktop: SVG Map */}
-      <div className="hidden md:block w-full max-w-4xl mx-auto cursor-pointer">
-        <USAMap onClick={handleMapClick} defaultFill="#CBD5E1" />
-      </div>
-
-      {/* Mobile: Dropdown fallback */}
-      <div className="md:hidden max-w-sm mx-auto px-4">
-        <label htmlFor="state-select" className="block text-sm font-bold text-primary/70 mb-2">
-          Select your state:
-        </label>
-        <select
-          id="state-select"
-          className="w-full h-12 px-4 rounded-xl border-2 border-primary/20 bg-surface text-primary font-medium focus:outline-none focus:ring-2 focus:ring-primary"
-          defaultValue=""
-          onChange={(e) => { if (e.target.value) fetchRules(e.target.value); }}
-        >
-          <option value="" disabled>-- Choose a state --</option>
-          {Object.entries(US_STATES).map(([abbr, name]) => (
-            <option key={abbr} value={abbr}>{name}</option>
-          ))}
-        </select>
-      </div>
+      {/* Mobile: Dropdown */}
+      {isMobile ? (
+        <div className="max-w-sm mx-auto px-4">
+          <label htmlFor="state-select" className="block text-sm font-medium mb-2 text-primary/70">
+            Select your state
+          </label>
+          <select
+            id="state-select"
+            className="w-full p-3 border-2 border-primary/20 rounded-xl text-base bg-surface text-primary font-medium focus:outline-none focus:ring-2 focus:ring-primary"
+            defaultValue=""
+            onChange={(e) => { if (e.target.value) fetchRules(e.target.value); }}
+          >
+            <option value="" disabled>Choose a state...</option>
+            {Object.entries(US_STATES).map(([abbr, name]) => (
+              <option key={abbr} value={abbr}>{name}</option>
+            ))}
+          </select>
+        </div>
+      ) : (
+        /* Desktop: SVG Map */
+        <div className="w-full max-w-4xl mx-auto cursor-pointer">
+          <USAMap onClick={handleMapClick} defaultFill="#CBD5E1" />
+        </div>
+      )}
 
       {/* Slide-up Drawer */}
       <AnimatePresence>

@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer } from "recharts";
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { Award, Target } from "lucide-react";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export default function StatsPage() {
   const [stats, setStats] = useState({
@@ -33,6 +35,9 @@ export default function StatsPage() {
     });
   }, []);
 
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const chartSize = isMobile ? 280 : 400;
+
   const data = [
     { subject: "Quiz Mastery", A: stats.quiz, fullMark: 100 },
     { subject: "Checklist readiness", A: stats.checklists, fullMark: 100 },
@@ -57,9 +62,8 @@ export default function StatsPage() {
         <div className="absolute -top-32 -right-32 w-64 h-64 bg-accent/5 rounded-full blur-3xl" />
         <div className="absolute -bottom-32 -left-32 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
         
-        <div className="w-full h-[400px] md:h-[500px]">
-          <ResponsiveContainer width="100%" height="100%">
-            <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
+        <div className="w-full flex items-center justify-center py-4">
+          <RadarChart width={chartSize} height={chartSize} cx={chartSize / 2} cy={chartSize / 2} outerRadius={chartSize * 0.35} data={data}>
               <PolarGrid stroke="currentColor" className="text-primary/10" />
               <PolarAngleAxis dataKey="subject" tick={{ fill: "currentColor", className: "text-primary font-bold text-xs md:text-sm" }} />
               <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
@@ -71,8 +75,7 @@ export default function StatsPage() {
                 fillOpacity={0.5}
               />
             </RadarChart>
-          </ResponsiveContainer>
-        </div>
+          </div>
         
         <div className="mt-8 flex items-center justify-center gap-3 w-full bg-primary/5 p-4 rounded-xl border border-primary/10">
           <Award className="w-6 h-6 text-accent" />

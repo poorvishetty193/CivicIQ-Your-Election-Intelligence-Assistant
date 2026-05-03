@@ -185,7 +185,7 @@ export function CivicPassport() {
       </div>
 
       {/* Badge Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
+      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-4 mb-10">
         {BADGES.map((badge) => {
           const isEarned = earnedBadges.includes(badge.id);
           const isNew = justEarned === badge.id;

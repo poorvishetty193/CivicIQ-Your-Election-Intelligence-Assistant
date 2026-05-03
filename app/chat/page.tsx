@@ -1,5 +1,7 @@
 import { Suspense } from "react"
 import { ChatInterface } from "@/components/ChatInterface"
+import { ErrorBoundary } from "@/components/ErrorBoundary"
+import { Skeleton } from "@/components/Skeleton"
 import { Metadata } from "next"
 
 export const metadata: Metadata = {
@@ -9,17 +11,19 @@ export const metadata: Metadata = {
 
 export default function ChatPage() {
   return (
-    <div className="flex-1 container mx-auto p-4 flex flex-col pt-8">
-      <div className="mb-8 text-center animate-in fade-in slide-in-from-top-4 duration-500">
-        <h1 className="text-4xl font-bold mb-2">Your Election Assistant</h1>
-        <p className="text-primary/70 max-w-2xl mx-auto">
-          Have questions about voting in your state, election timelines, or how the process works? 
-          Ask our AI assistant for clear, unbiased information.
-        </p>
-      </div>
-      <Suspense fallback={<div className="flex-1 flex items-center justify-center text-primary/50">Loading chat...</div>}>
-        <ChatInterface />
-      </Suspense>
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <ErrorBoundary>
+        <Suspense
+          fallback={
+            <div className="flex-1 flex flex-col p-6 gap-4">
+              <Skeleton lines={3} className="h-6" />
+              <Skeleton lines={2} className="h-6" />
+            </div>
+          }
+        >
+          <ChatInterface />
+        </Suspense>
+      </ErrorBoundary>
     </div>
   )
 }

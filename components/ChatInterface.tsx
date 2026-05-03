@@ -11,6 +11,9 @@ import remarkGfm from "remark-gfm";
 import { VoiceChat, speakText } from "./VoiceChat";
 import { event } from "@/lib/analytics";
 import { trackFeatureEvent } from "@/lib/firestore";
+import { generateSessionId } from "@/lib/utils";
+
+const SESSION_ID = generateSessionId();
 
 const STARTER_QUESTIONS = [
   "How do I register to vote?",
@@ -67,7 +70,7 @@ export function ChatInterface() {
     setError(null);
 
     event('chat_message_sent', { category: 'engagement', label: 'ai_chat' });
-    trackFeatureEvent('chat', 'session_' + Date.now().toString());
+    trackFeatureEvent('chat', SESSION_ID);
 
     try {
       const res = await fetch("/api/chat", {
@@ -143,8 +146,10 @@ export function ChatInterface() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] max-w-4xl mx-auto w-full bg-surface shadow-custom rounded-custom overflow-hidden border border-primary/10">
-      <div className="flex items-center justify-between p-4 border-b border-primary/10 bg-bg">
+    <div className="flex flex-col bg-surface shadow-custom rounded-custom overflow-hidden border border-primary/10"
+         style={{ height: '100dvh', maxHeight: '100dvh' }}>
+      {/* Header */}
+      <div className="flex items-center justify-between p-4 border-b border-primary/10 bg-bg shrink-0">
         <div className="flex items-center gap-2">
           <Bot className="h-6 w-6 text-primary" />
           <h2 className="font-bold text-lg">CivicIQ Assistant</h2>
@@ -163,6 +168,7 @@ export function ChatInterface() {
         </div>
       </div>
 
+      {/* Message list — flex-1 + overflow-y: auto */}
       <div className="flex-1 overflow-y-auto p-4 space-y-6">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center space-y-6 opacity-80 animate-in fade-in zoom-in duration-500">
@@ -170,12 +176,13 @@ export function ChatInterface() {
             <p className="text-lg max-w-md">
               Hi! I&apos;m CivicIQ, your nonpartisan election assistant powered by Google Gemini. Ask me anything about voting and elections.
             </p>
-            <div className="flex flex-wrap justify-center gap-2 max-w-2xl">
+            {/* Starter chips — horizontal scrollable */}
+            <div className="flex overflow-x-auto gap-2 max-w-2xl pb-1 hide-scrollbar">
               {STARTER_QUESTIONS.map((q) => (
                 <button
                   key={q}
                   onClick={() => appendMessage(q)}
-                  className="px-4 py-2 bg-primary/5 hover:bg-primary/10 border border-primary/10 rounded-full text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-primary outline-none"
+                  className="whitespace-nowrap shrink-0 px-4 py-2 bg-primary/5 hover:bg-primary/10 border border-primary/10 rounded-full text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-primary outline-none"
                 >
                   {q}
                 </button>
@@ -248,20 +255,26 @@ export function ChatInterface() {
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="p-4 bg-bg border-t border-primary/10">
+      {/* Sticky input bar with safe-area-inset-bottom for iPhone */}
+      <div className="p-3 bg-bg border-t border-primary/10 safe-bottom shrink-0">
         <form onSubmit={handleSubmit} className="flex gap-2">
           <VoiceChat onTranscript={appendMessage} isProcessing={isLoading} />
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Ask a question about voting..."
-            className="flex-1 bg-surface"
+            className="flex-1 bg-surface text-base"
+            style={{ fontSize: '16px' }}
             disabled={isLoading}
           />
-          <Button type="submit" disabled={isLoading || !input.trim()}>
+          <button
+            type="submit"
+            disabled={isLoading || !input.trim()}
+            aria-label="Send message"
+            className="w-12 h-12 shrink-0 flex items-center justify-center rounded-xl bg-primary text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-primary/90 transition-colors"
+          >
             <Send className="h-5 w-5" />
-            <span className="sr-only">Send</span>
-          </Button>
+          </button>
         </form>
       </div>
     </div>
