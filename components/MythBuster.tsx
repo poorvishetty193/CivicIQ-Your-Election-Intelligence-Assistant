@@ -67,7 +67,7 @@ export function MythBuster() {
               <div className={`card-inner ${isFlipped ? 'flipped' : ''}`}>
 
                 {/* Front — Myth */}
-                <div className="card-face rounded-2xl border-2 border-red-200 bg-red-50 p-6 flex flex-col justify-between shadow-md">
+                <div className="card-face card-face-front rounded-2xl border-2 border-red-200 bg-red-50 p-6 flex flex-col justify-between shadow-md">
                   <div className="flex flex-col items-center text-center flex-1 justify-center gap-4">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-600 uppercase tracking-widest">
                       Myth
