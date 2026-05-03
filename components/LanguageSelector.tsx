@@ -5,16 +5,33 @@ import { Globe } from "lucide-react"
 import Script from "next/script"
 
 export function LanguageSelector() {
-  // Initialize Google Translate widget
   useEffect(() => {
-    // @ts-ignore
-    window.googleTranslateElementInit = () => {
+    const initTranslate = () => {
       // @ts-ignore
-      new window.google.translate.TranslateElement(
+      if (window.google && window.google.translate && window.google.translate.TranslateElement) {
+        // Clear previous widget elements if any to avoid duplicates
+        const el = document.getElementById("google_translate_element")
+        if (el) el.innerHTML = ""
+
         // @ts-ignore
-        { pageLanguage: "en", includedLanguages: "en,kn,hi", layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE },
-        "google_translate_element"
-      )
+        new window.google.translate.TranslateElement(
+          {
+            pageLanguage: "en",
+            includedLanguages: "en,es,fr,hi,zh,ar,pt,tl",
+            layout: 0
+          },
+          "google_translate_element"
+        )
+      }
+    }
+
+    // @ts-ignore
+    window.googleTranslateElementInit = initTranslate
+
+    // Check if script was already loaded in a previous mount
+    // @ts-ignore
+    if (window.google && window.google.translate) {
+      initTranslate()
     }
   }, [])
 
@@ -54,7 +71,7 @@ export function LanguageSelector() {
       `}} />
       <Script 
         src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" 
-        strategy="lazyOnload"
+        strategy="afterInteractive"
       />
     </div>
   )

@@ -5,8 +5,8 @@ import { CalendarDays, CheckCircle2 } from "lucide-react";
 
 // Target dates for upcoming major elections
 const ELECTION_DATES = [
-  { label: "2025 State & Local Elections", date: new Date("2025-11-04T00:00:00") },
-  { label: "2026 Midterm Elections", date: new Date("2026-11-03T00:00:00") }
+  { label: "2025 State & Local Elections", date: new Date("2025-11-04T20:00:00") },
+  { label: "2026 Midterm Elections", date: new Date("2026-11-03T20:00:00") }
 ];
 
 export function ElectionCountdown() {
