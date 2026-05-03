@@ -54,7 +54,7 @@ export function ElectionCountdown() {
 
   const TimeBlock = ({ value, label }: { value: number, label: string }) => (
     <div className="flex flex-col items-center flex-1 min-w-0">
-      <div className="bg-surface border border-primary/20 text-primary font-mono text-xl xs:text-2xl sm:text-3xl md:text-5xl font-bold py-2 sm:py-3 md:py-4 px-2 sm:px-4 md:px-6 rounded-lg shadow-inner w-full min-w-[50px] max-w-[100px] text-center relative overflow-hidden">
+      <div className="bg-surface border border-primary/20 text-primary font-mono text-xl xs:text-2xl sm:text-3xl md:text-5xl font-bold py-2 sm:py-3 md:py-4 px-2 sm:px-4 md:px-6 rounded-lg shadow-inner w-full min-w-[60px] sm:min-w-[80px] md:min-w-[110px] max-w-[100px] md:max-w-[140px] text-center relative overflow-hidden">
         {value.toString().padStart(2, '0')}
         <div className="absolute top-1/2 left-0 w-full h-[1px] bg-bg/50 shadow-sm" />
       </div>
@@ -71,13 +71,13 @@ export function ElectionCountdown() {
       
       <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-8">{nextElection.label}</h3>
       
-      <div className="flex items-center gap-2 md:gap-6 mb-8 w-full max-w-md">
+      <div className="flex items-start gap-2 md:gap-6 mb-8 w-full max-w-md md:max-w-xl">
         <TimeBlock value={days} label="Days" />
-        <span className="text-xl sm:text-3xl font-bold text-primary/20 -mt-6">:</span>
+        <span className="text-xl sm:text-3xl md:text-5xl font-bold text-primary/20 mt-2 sm:mt-3 md:mt-4">:</span>
         <TimeBlock value={hours} label="Hours" />
-        <span className="text-xl sm:text-3xl font-bold text-primary/20 -mt-6">:</span>
+        <span className="text-xl sm:text-3xl md:text-5xl font-bold text-primary/20 mt-2 sm:mt-3 md:mt-4">:</span>
         <TimeBlock value={minutes} label="Mins" />
-        <span className="text-xl sm:text-3xl font-bold text-primary/20 -mt-6">:</span>
+        <span className="text-xl sm:text-3xl md:text-5xl font-bold text-primary/20 mt-2 sm:mt-3 md:mt-4">:</span>
         <TimeBlock value={seconds} label="Secs" />
       </div>
 
