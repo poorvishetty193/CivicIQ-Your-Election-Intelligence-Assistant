@@ -385,6 +385,25 @@ npm run lint         # ESLint check
 
 ---
 
+## 13. Code Quality & Mobile Optimization
+
+- **API Type Definitions:** Created comprehensive type definitions in `types/api.ts` (ChatMessage, StateRules, LeaderboardEntry, etc.) to eradicate `any` types.
+- **Centralized Constants:** Extracted all hardcoded strings and settings to `lib/constants.ts` (GEMINI_MODEL, badges, phases, myths, etc.).
+- **Utility and Custom Hooks:** Implemented custom hooks for type-safe and responsive operations:
+  - `useLocalStorage.ts` for SSR-safe client persistence.
+  - `useDebounce.ts` for delaying state updates cleanly.
+  - `useMediaQuery.ts` for desktop vs mobile detection.
+  - `useGemini.ts` for unified endpoint execution.
+- **Improved Components:** Added `<ErrorBoundary />` and `<Skeleton />` for superior async error/loading experiences.
+- **Mobile Experience & Responsiveness:**
+  - Prevented input auto-zoom on iOS by setting inputs to `16px`.
+  - Upgraded **Navbar** with a seamless right-sliding mobile navigation drawer and interactive hamburger toggle.
+  - Optimized **Chat Assistant** with a 100dvh flex view, sticky input bar with safe-bottom margins, and horizontally-scrollable quick starter chips.
+  - Revamped **State Explorer** to swap interactive SVG maps for a responsive mobile dropdown.
+  - Refactored badge, card, and timeline layouts to fully support small screens without horizontal overflows.
+
+---
+
 *Powered by Google Gemini 2.0 Flash. Built with Next.js 14.*
 
 **Go vote. 🗳️**
@@ -394,3 +413,4 @@ npm run lint         # ESLint check
 ## Author: 
 
 **Poorvi Shetty**
+
