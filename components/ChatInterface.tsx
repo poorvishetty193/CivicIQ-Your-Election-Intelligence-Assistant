@@ -147,7 +147,7 @@ export function ChatInterface() {
 
   return (
     <div className="flex flex-col max-w-3xl mx-auto w-full bg-surface shadow-custom rounded-custom overflow-hidden border border-primary/10"
-         style={{ height: '100dvh', maxHeight: '100dvh' }}>
+         style={{ height: 'calc(100dvh - 4.5rem)', maxHeight: 'calc(100dvh - 4.5rem)' }}>
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-primary/10 bg-bg shrink-0">
         <div className="flex items-center gap-2">

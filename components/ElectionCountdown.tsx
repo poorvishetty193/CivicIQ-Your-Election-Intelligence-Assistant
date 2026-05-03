@@ -53,31 +53,31 @@ export function ElectionCountdown() {
   else actionItem = "Confirm your polling place and make a plan to vote!";
 
   const TimeBlock = ({ value, label }: { value: number, label: string }) => (
-    <div className="flex flex-col items-center">
-      <div className="bg-surface border border-primary/20 text-primary font-mono text-3xl md:text-5xl font-bold py-3 md:py-4 px-4 md:px-6 rounded-lg shadow-inner w-[70px] md:w-[100px] text-center relative overflow-hidden">
+    <div className="flex flex-col items-center flex-1 min-w-0">
+      <div className="bg-surface border border-primary/20 text-primary font-mono text-xl xs:text-2xl sm:text-3xl md:text-5xl font-bold py-2 sm:py-3 md:py-4 px-2 sm:px-4 md:px-6 rounded-lg shadow-inner w-full min-w-[50px] max-w-[100px] text-center relative overflow-hidden">
         {value.toString().padStart(2, '0')}
         <div className="absolute top-1/2 left-0 w-full h-[1px] bg-bg/50 shadow-sm" />
       </div>
-      <span className="text-xs uppercase tracking-wider font-bold text-primary/60 mt-2">{label}</span>
+      <span className="text-[10px] sm:text-xs uppercase tracking-wider font-bold text-primary/60 mt-2 truncate max-w-full">{label}</span>
     </div>
   );
 
   return (
-    <div className="bg-accent/5 rounded-2xl p-8 border border-accent/20 max-w-3xl mx-auto flex flex-col items-center text-center">
-      <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent/10 text-accent font-semibold rounded-full mb-6">
+    <div className="bg-accent/5 rounded-2xl p-4 sm:p-8 border border-accent/20 max-w-3xl mx-auto flex flex-col items-center text-center">
+      <div className="inline-flex items-center gap-2 px-3 py-1 bg-accent/10 text-accent font-semibold rounded-full mb-4 sm:mb-6">
         <CalendarDays className="w-4 h-4" />
         <span>Next Major Election</span>
       </div>
       
-      <h3 className="text-2xl font-bold mb-8">{nextElection.label}</h3>
+      <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-8">{nextElection.label}</h3>
       
-      <div className="flex items-center gap-4 md:gap-6 mb-8">
+      <div className="flex items-center gap-2 md:gap-6 mb-8 w-full max-w-md">
         <TimeBlock value={days} label="Days" />
-        <span className="text-3xl font-bold text-primary/20 -mt-6">:</span>
+        <span className="text-xl sm:text-3xl font-bold text-primary/20 -mt-6">:</span>
         <TimeBlock value={hours} label="Hours" />
-        <span className="text-3xl font-bold text-primary/20 -mt-6">:</span>
+        <span className="text-xl sm:text-3xl font-bold text-primary/20 -mt-6">:</span>
         <TimeBlock value={minutes} label="Mins" />
-        <span className="text-3xl font-bold text-primary/20 -mt-6">:</span>
+        <span className="text-xl sm:text-3xl font-bold text-primary/20 -mt-6">:</span>
         <TimeBlock value={seconds} label="Secs" />
       </div>
 
